@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Trải nghiệm thử Brain10</title>
+  <meta name="description" content="Thử giao diện Brain10 ngay trên trình duyệt: công việc, lịch trình, tập trung và check-out. Bản mô phỏng tương tác từ app Android.">
+  <meta name="theme-color" content="#f5f5ff">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/try/demo.css">
+  <script src="/try/demo.js" defer></script>
+</head>
+<body>
+  <header class="web-header"><a href="/" class="web-brand"><img src="/assets/icon.svg" alt="" width="28" height="28">brain10 <span>/ trải nghiệm thử</span></a><a href="/" class="back-site">← Trang giới thiệu</a></header>
+  <main class="demo-layout">
+    <aside class="demo-guide">
+      <span class="eyebrow">TỪ APP ANDROID · 0.5.1</span>
+      <h1>Một ngày có<br><em>chủ đích.</em></h1>
+      <p>Chạm, thêm một việc, rồi thử hoàn thành nó. Làm quen với Brain10 theo nhịp của bạn.</p>
+      <ol class="guide-steps"><li><span>01</span><div><strong>Chọn điều quan trọng</strong><small>Thêm việc ở tab Hôm nay.</small></div></li><li><span>02</span><div><strong>Giữ chỗ cho thời gian</strong><small>Nhập lịch cố định, xem kế hoạch mẫu.</small></div></li><li><span>03</span><div><strong>Tập trung & nhìn lại</strong><small>Thử bộ đếm và check-out công việc.</small></div></li></ol>
+      <div class="demo-explainer"><span class="status-dot"></span><strong>Bản thử trong trình duyệt</strong><p>Dữ liệu mẫu và thao tác được lưu riêng trên trình duyệt này, không đồng bộ với APK. Những tính năng cần Android sẽ có thông báo khi bạn chọn.</p><button data-action="limits" class="text-button">Xem những gì có thể thử ↗</button></div>
+      <a href="/#download" class="download-link">Khám phá bản Android <span>↗</span></a>
+    </aside>
+    <section class="phone-stage" aria-label="Giao diện ứng dụng Brain10">
+      <div class="preview-label"><span class="status-dot"></span> BẢN TRẢI NGHIỆM WEB <button data-action="limits" aria-label="Thông tin bản trải nghiệm">ⓘ</button></div>
+      <div class="app-device" id="device">
+        <header class="app-header" id="app-header"></header>
+        <div id="screen" class="app-content" tabindex="-1"></div>
+        <nav id="app-nav" class="app-nav" aria-label="Các tab ứng dụng"></nav>
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      </div>
+      <p class="preview-foot">Giao diện mô phỏng từ APK · Không cần cài đặt</p>
+    </section>
+    <aside class="demo-note"><span>KHÔNG CẦN TÀI KHOẢN</span><p>Một việc mỗi lúc.<br>Một bước tiến mới.</p><button class="text-button" data-action="welcome">Thử màn chào ban đầu ↗</button></aside>
+  </main>
+  <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  <noscript>Bật JavaScript để trải nghiệm giao diện tương tác. <a href="/">Về trang giới thiệu</a>.</noscript>
+</body>
+</html>

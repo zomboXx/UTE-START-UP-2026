@@ -22,7 +22,8 @@ http.createServer(async(req,res)=>{
       res.writeHead(200,{'Content-Type':'application/vnd.android.package-archive','Content-Disposition':'attachment; filename="brain10-android-debug.apk"','Content-Length':(await stat(apk)).size,'Cache-Control':'no-store'});
       if(req.method==='HEAD')res.end();else{const stream=createReadStream(apk);stream.on('error',()=>res.destroy());res.on('close',()=>stream.destroy());stream.pipe(res);}return;
     }
-    const target=path.resolve(root,'.'+(url==='/'?'/index.html':url));
+    const page=url==='/'?'/index.html':url==='/try'||url==='/try/'?'/try/index.html':url;
+    const target=path.resolve(root,'.'+page);
     if(!target.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
     const body=await readFile(target);res.writeHead(200,{'Content-Type':types[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:body);
   } catch {res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Không tìm thấy trang.');}

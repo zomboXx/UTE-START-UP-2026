@@ -2,7 +2,7 @@
 
 Website công khai: https://brain10-ute-startup2026.vercel.app — đã triển khai Vercel và nối repo GitHub, ngày 19/10/2026.
 
-Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Không chạy ứng dụng quản lý thời gian trong trình duyệt.
+Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Trang `/try/` bổ sung bản trải nghiệm tương tác dựa trên giao diện APK 0.5.1; đây là bản thử cục bộ trên trình duyệt, không thay thế ứng dụng Android.
 
 ## Chạy local
 
@@ -24,6 +24,7 @@ dist/
   style.css        Responsive layout
   site.js          Menu, FAQ/dialog, thông tin tải
   release.json     Metadata phát hành, không chứa file APK
+  try/             Giao diện trải nghiệm web độc lập, không gọi API
   assets/          Logo, font có license, ảnh giao diện app
 server.mjs         Preview cục bộ; không dùng làm server Vercel
 vercel.json        Cấu hình static deployment
@@ -68,6 +69,6 @@ GitHub chặn file trên 100 MiB trong Git; bản APK debug hiện khoảng 163 
 
 ## Kiểm tra
 
-`npm run check` kiểm tra cú pháp JavaScript. Bản local đã được kiểm tra browser ở desktop và viewport điện thoại, menu, dialog, FAQ, HTTP headers của file tải và trạng thái không có URL phát hành. Các ảnh QA trong `screenshots/` không đưa vào Git.
+`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 6 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu và bản trải nghiệm. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
 
 Font Plus Jakarta Sans: Google Fonts, SIL Open Font License; xem `dist/assets/OFL-Jakarta.txt`. Repo chưa được gán giấy phép mã nguồn thay mặt chủ sở hữu.
