@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check dist/site.js && node --check dist/try/demo.js && node --check dist/try/planning.js && node --check dist/try/calendar.js && node --check api/plans.mjs && node --check server.mjs",
+    "check": "node --check dist/site.js && node --check dist/try/demo.js && node --check dist/try/planning.js && node --check dist/try/calendar.js && node --check dist/try/wellbeing.js && node --check api/plans.mjs && node --check server.mjs",
     "test": "playwright test",
     "test:server": "node --test test-server/*.test.mjs"
   },

@@ -4,7 +4,7 @@ Source cập nhật: 24/10/2026. Đường dẫn `/try/`; trang giới thiệu v
 
 ## Thiết kế và hành vi
 
-- Giao diện tham chiếu Flutter APK, cập nhật lịch trình 0.6.1: Roboto self-host, nền #F5F5FF, xanh #2463EB, thẻ trắng, thanh 5 tab. Desktop có khung điện thoại và hướng dẫn; điện thoại sử dụng chiều cao viewport, thanh điều hướng cố định trong khung app.
+- Giao diện tham chiếu Flutter APK, cập nhật nhắc nghỉ nhẹ 0.6.2: Roboto self-host, nền #F5F5FF, xanh #2463EB, thẻ trắng, thanh 5 tab. Desktop có khung điện thoại và hướng dẫn; điện thoại sử dụng chiều cao viewport, thanh điều hướng cố định trong khung app.
 - Màn chào: tên, sinh nhật, mục tiêu và chế độ khách. Nút dùng hồ sơ mẫu giúp thử mà không nhập dữ liệu cá nhân.
 - Hôm nay: công việc hôm nay/ngày mai, thêm tên/thời lượng/ghi chú, check-out có phản hồi 160 ký tự, lựa chọn quyền xem có nhãn mô phỏng, tiến độ cập nhật. Hoạt động ngoài điện thoại được nhập thời gian trong 24 giờ trước hiện tại.
 - Lịch trình: tự nhập, sửa, xóa lịch cố định hàng tuần; chặn khung trùng. Sau khi có lịch cố định mới được xem kế hoạch mẫu DBMS/CNPM/KTLT trong 3 ngày tới. Bộ xếp giờ cục bộ chọn khung 45 phút từ 08:00–22:00, tối đa 2 phiên/ngày, tránh lịch cố định và phiên đã xác nhận. Xem trước rồi xác nhận, không tự thêm.
@@ -38,7 +38,7 @@ Roboto lấy từ bộ font Flutter có sẵn, license Apache 2.0 lưu tại `di
 
 ## Kiểm chứng
 
-`npm run check` và `npm test` (13 bài), `npm run test:server` (6 bài):
+`npm run check` và `npm test` (16 bài), `npm run test:server` (9 bài):
 
 1. Trang giới thiệu giữ nội dung, link demo hoạt động, không tràn ngang và thanh tab trong viewport ở 1440×1000, 390×844, 320×640, 844×390.
 2. Thêm việc, giữ sau reload, escape nội dung HTML, check-out cập nhật tiến độ và biểu đồ.
@@ -63,3 +63,11 @@ Chuyển giữa Đầu việc và Bảng lịch ngay dưới tiêu đề Lịch 
 Bảng hiển thị T2–CN, ba hàng Sáng (00–12h), Chiều (12–18h), Tối (18–24h), nhiều hoạt động trong một ô theo giờ bắt đầu. Lịch cố định được chiếu lặp lại; thời gian đã qua là Đã kết thúc và không yêu cầu check-out. Chọn 1/2/4 tuần, lùi/tiến tuần hoặc về tuần hiện tại. Xem rộng mở bảng có thể cuộn ngang trên điện thoại. Chạm một buổi để xem mục tiêu, bước học, đầu ra, ghi nhận và check-out. Việc chưa có giờ nằm riêng dưới bảng. Bảng dùng múi giờ Việt Nam và dữ liệu đã lưu; không thay đổi giới hạn tạo lịch AI 7 ngày và không gọi thêm AI.
 
 Ba bài browser mới kiểm tra đếm ngược qua ranh giới thời gian, nhiều buổi trong một ô, chi tiết/check-out, 4 tuần, lịch cố định, mở rộng và không tràn ngang ở 390/320px. Ba bài Node kiểm tra trạng thái, ranh giới tuần/năm và phép chiếu lịch không làm thay đổi dữ liệu gốc.
+
+## Nghỉ nhẹ và uống nước 0.6.2
+
+Trong tab Tập trung có công tắc nhắc và nút Thử âm báo. Mốc 40/80/120… tính theo giờ bắt đầu, chỉ nhắc khi phiên còn chạy; phiên tối đa 40 phút không nhắc giữa phiên. Banner hiện trên khung app hoặc launcher, kèm hai nốt nhẹ qua Web Audio; nút xác nhận ẩn banner. Bộ đếm tiếp tục, không tắt phiên. Bật tiếng qua thao tác bắt đầu phiên/công tắc/Thử âm báo; nếu chưa sẵn sàng hoặc bị trình duyệt chặn, banner nói rõ. Sau reload có thể cần bật tiếng lại.
+
+Mốc đã nhắc lưu vào focus session trong localStorage, tránh phát trùng qua reload. Tab bị trì hoãn chỉ nhận mốc mới nhất, không phát dồn. Tắt nhắc, kết thúc hoặc check-out việc liên kết sẽ ẩn banner và ngừng nhắc. Bản web không xin quyền thông báo hệ thống, không bảo đảm nhắc khi đóng tab/thiết bị ngủ. Chưa triển khai service worker push hoặc alarm nền như Android.
+
+Đã qua ba test Playwright mới và ba test Node mới: ranh giới thời gian, nhiều mốc, lựa chọn lưu lại, kết thúc, âm thanh bị chặn, không tràn 320px. QA thêm Web Audio thật trên Edge headless, đã thấy banner báo âm được phát và không có pageerror. Không gọi AI, không tiêu credit. Vercel vẫn bị chặn; cập nhật này hiện có ở source và localhost.

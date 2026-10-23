@@ -1,4 +1,5 @@
 import {defaultPreferences,makePlanningRequest,convertDraft,validateAcceptance} from './planning.js';
+import {reminderBoundary} from './wellbeing.js';
 import {periods,vietnamDay,addDays,weekStart,startTime,sessionStatus,calendarWeeks} from './calendar.js';
 // Private beta AI calls use a server-only provider key. No device permissions.
 const KEY = 'brain10.web-demo.v1';
@@ -45,6 +46,7 @@ try {
 let tab = 0, selectedDay = 0, duration = 30, preview = [], timerNotice = null;
 let phoneView = new URL(location.href).searchParams.get('view') === 'launcher' ? 'launcher' : 'app';
 let launcherMinute = -1;
+let reminderAudio=null;
 let aiBusy=false,aiDraft=null,aiSessions=[],betaCode='';
 let scheduleView='list',calendarStart=weekStart(vietnamDay(Date.now())),calendarSpan=1,lastScheduleMinute=-1;
 const screen = document.getElementById('screen'), nav = document.getElementById('app-nav'), header = document.getElementById('app-header');
@@ -61,7 +63,7 @@ function unavailable(title, detail) {
   showModal(title,`<div class="modal-icon">${icon('info')}</div><p class="modal-copy">Tính năng này hiện chưa có trên bản trải nghiệm thử trên website.</p><p class="modal-copy">${esc(detail)}</p><button class="button full" data-action="close">Đã hiểu</button>`);
 }
 function openLimits() {
-  showModal('Bạn có thể thử gì?',`<p class="modal-copy">Giao diện dựa trên app Android 0.6.1. Đây là không gian thử riêng trên trình duyệt.</p><ul class="limit-list"><li><strong>Có thể thao tác:</strong> thêm việc, check-out, ghi hoạt động, sửa lịch cố định, xem lịch theo đầu việc hoặc bảng nhiều tuần, xem và xác nhận kế hoạch mẫu, chạy bộ đếm, tạo nhóm mẫu.</li><li><strong>Widget mô phỏng:</strong> chọn Màn hình chính để thử Ghi nhanh 2×2 và Nhịp hôm nay 4×2. Widget dùng cùng dữ liệu và bộ đếm với giao diện app.</li><li><strong>Chưa có:</strong> screen time thật, khóa ứng dụng / Internet, chạy nền như Android, cài widget lên màn hình thiết bị thật, ảnh và giọng nói.</li><li><strong>Chưa kết nối:</strong> Đăng nhập, mời bạn và đồng bộ nhóm. AI thật dùng mã thử của nhóm và cần bạn chủ động gửi yêu cầu; lịch mẫu không gọi AI.</li></ul><p class="modal-copy">Màn hình chính là mô phỏng trong trang web, không phải hệ điều hành Android. Dữ liệu lưu ở trình duyệt này. Riêng khi bạn chọn tạo lịch AI, mục tiêu và ngữ cảnh lịch được gửi qua backend tới PoolAI; không gửi hồ sơ cá nhân hoặc screen time. Xóa dữ liệu trong Hồ sơ để bắt đầu lại. Hosting có thể ghi log truy cập kỹ thuật.</p><button class="button full" data-action="close">Bắt đầu khám phá</button>`);
+  showModal('Bạn có thể thử gì?',`<p class="modal-copy">Giao diện dựa trên app Android 0.6.2. Đây là không gian thử riêng trên trình duyệt.</p><ul class="limit-list"><li><strong>Có thể thao tác:</strong> thêm việc, check-out, ghi hoạt động, sửa lịch cố định, xem lịch theo đầu việc hoặc bảng nhiều tuần, xem và xác nhận kế hoạch mẫu, chạy bộ đếm, tạo nhóm mẫu.</li><li><strong>Widget mô phỏng:</strong> chọn Màn hình chính để thử Ghi nhanh 2×2 và Nhịp hôm nay 4×2. Widget dùng cùng dữ liệu và bộ đếm với giao diện app.</li><li><strong>Chưa có:</strong> screen time thật, khóa ứng dụng / Internet, chạy nền như Android, cài widget lên màn hình thiết bị thật, ảnh và giọng nói.</li><li><strong>Chưa kết nối:</strong> Đăng nhập, mời bạn và đồng bộ nhóm. AI thật dùng mã thử của nhóm và cần bạn chủ động gửi yêu cầu; lịch mẫu không gọi AI.</li></ul><p class="modal-copy">Màn hình chính là mô phỏng trong trang web, không phải hệ điều hành Android. Dữ liệu lưu ở trình duyệt này. Riêng khi bạn chọn tạo lịch AI, mục tiêu và ngữ cảnh lịch được gửi qua backend tới PoolAI; không gửi hồ sơ cá nhân hoặc screen time. Xóa dữ liệu trong Hồ sơ để bắt đầu lại. Hosting có thể ghi log truy cập kỹ thuật.</p><button class="button full" data-action="close">Bắt đầu khám phá</button>`);
 }
 function render(resetScroll = false) {
   const previousScroll = screen.scrollTop;
@@ -268,8 +270,39 @@ function renderAIDraft(){
 }
 function renderFocus() {
   const active = !!state.focus;
-  screen.innerHTML = `<div class="screen-body"><h1 class="screen-title">Trở về với một việc.</h1><p class="screen-subtitle">Dành một khoảng thời gian cho điều bạn đã chọn.</p><div class="notice"><div class="row">${icon('lock')}<strong>Bộ đếm thử · không khóa thiết bị</strong></div><p style="margin-top:7px">Chặn ứng dụng, chặn Internet và bảo vệ chạy nền hiện chưa có trên bản web.</p><button class="text-button" data-action="protection">Tìm hiểu quyền trên Android ↗</button></div><div class="timer-panel"><div class="timer-label">MỘT KHOẢNG DÀNH RIÊNG CHO BẠN</div><div class="timer-ring" id="focus-clock" role="timer" aria-label="Thời gian tập trung còn lại">${focusClock()}</div><button class="button" data-action="${active?'stop-focus':'start-focus'}">${icon(active?'stop':'play')} ${active?'Kết thúc phiên':'Bắt đầu phiên'}</button><p>Thả lỏng vai. Bắt đầu từ một việc.<br>Bạn vẫn có thể sử dụng thiết bị bình thường.</p></div>${!active?`<div class="card"><h2 style="font-size:17px">Khoảng tập trung của bạn</h2><label class="field">Thời lượng (phút)<input id="focus-duration" type="number" min="1" max="480" value="${duration}" required></label><div class="chips">${[25,30,60,90].map(n=>`<button class="chip ${duration===n?'selected':''}" data-action="duration" data-minutes="${n}">${n} phút</button>`).join('')}</div><p class="tiny muted">Tối đa 8 giờ. Bộ đếm dựa vào giờ kết thúc; tab đóng sẽ không phát thông báo.</p></div>`:''}<p class="tiny muted">${Math.floor(state.sessions.reduce((sum,s)=>sum+s.seconds,0)/60)} phút đã ghi nhận từ các phiên trong bản web.</p></div>`;
+  screen.innerHTML = `<div class="screen-body"><h1 class="screen-title">Trở về với một việc.</h1><p class="screen-subtitle">Dành một khoảng thời gian cho điều bạn đã chọn.</p><div class="notice"><div class="row">${icon('lock')}<strong>Bộ đếm thử · không khóa thiết bị</strong></div><p style="margin-top:7px">Chặn ứng dụng, chặn Internet và bảo vệ chạy nền hiện chưa có trên bản web.</p><button class="text-button" data-action="protection">Tìm hiểu quyền trên Android ↗</button></div><div class="timer-panel"><div class="timer-label">MỘT KHOẢNG DÀNH RIÊNG CHO BẠN</div><div class="timer-ring" id="focus-clock" role="timer" aria-label="Thời gian tập trung còn lại">${focusClock()}</div><button class="button" data-action="${active?'stop-focus':'start-focus'}">${icon(active?'stop':'play')} ${active?'Kết thúc phiên':'Bắt đầu phiên'}</button><p>Thả lỏng vai. Bắt đầu từ một việc.<br>Bạn vẫn có thể sử dụng thiết bị bình thường.</p></div>${wellbeingCard()}${!active?`<div class="card"><h2 style="font-size:17px">Khoảng tập trung của bạn</h2><label class="field">Thời lượng (phút)<input id="focus-duration" type="number" min="1" max="480" value="${duration}" required></label><div class="chips">${[25,30,60,90].map(n=>`<button class="chip ${duration===n?'selected':''}" data-action="duration" data-minutes="${n}">${n} phút</button>`).join('')}</div><p class="tiny muted">Tối đa 8 giờ. Bộ đếm dựa vào giờ kết thúc; tab đóng sẽ không phát thông báo.</p></div>`:''}<p class="tiny muted">${Math.floor(state.sessions.reduce((sum,s)=>sum+s.seconds,0)/60)} phút đã ghi nhận từ các phiên trong bản web.</p></div>`;
 }
+function prepareReminderAudio(){
+  try {
+    const Audio=window.AudioContext || window.webkitAudioContext;
+    if(!Audio)return;
+    reminderAudio ||= new Audio();
+    return reminderAudio.resume().catch(()=>{});
+  }catch{}
+}
+function reminderSound(){
+  try {
+    if(reminderAudio?.state!=='running')return false;
+    const at=reminderAudio.currentTime;
+    for(const [offset,pitch] of [[0,660],[.28,880]]){
+      const tone=reminderAudio.createOscillator(),gain=reminderAudio.createGain();
+      tone.frequency.value=pitch;gain.gain.setValueAtTime(0,at+offset);
+      gain.gain.linearRampToValueAtTime(.08,at+offset+.02);gain.gain.exponentialRampToValueAtTime(.001,at+offset+.24);
+      tone.connect(gain);gain.connect(reminderAudio.destination);tone.start(at+offset);tone.stop(at+offset+.26);
+    }
+    return true;
+  }catch{return false;}
+}
+function hideWellbeing(){const el=document.getElementById('wellbeing-alert');el.hidden=true;el.innerHTML='';}
+function checkWellbeing(){
+  if(state.wellbeingReminders===false)return;
+  const boundary=reminderBoundary(state.focus);if(!boundary)return;
+  state.focus.reminderBoundary=boundary;save();
+  const sounded=reminderSound(),el=document.getElementById('wellbeing-alert');
+  el.innerHTML=`<div class="reminder-heading">${icon('leaf')}<strong>Đã tập trung ${boundary*40} phút</strong></div><p>Uống một ít nước, đứng dậy và thả lỏng vai trong 1–2 phút.</p><small>Bộ đếm vẫn chạy. ${sounded?'Âm báo đã phát; âm lượng phụ thuộc thiết bị.':'Âm thanh chưa sẵn sàng; nhấn Thử âm báo để bật tiếng.'}</small><div class="reminder-actions"><button class="button" data-action="dismiss-wellbeing">Đã nhớ · cảm ơn</button><button class="text-button" data-action="test-reminder-sound">Thử âm báo</button></div>`;
+  el.hidden=false;
+}
+function wellbeingCard(){return `<section class="card wellbeing-card"><label class="wellbeing-setting">${icon('leaf')}<span><strong>Nghỉ nhẹ & uống nước</strong><small>Nhắc sau mỗi 40 phút trong phiên dài.</small></span><input type="checkbox" id="wellbeing-enabled" aria-label="Nhắc nghỉ nhẹ và uống nước" ${state.wellbeingReminders!==false?'checked':''}></label><p>Dành 1–2 phút vận động nhẹ. Bộ đếm vẫn tiếp tục. Bản web nhắc khi trang còn mở; không bảo đảm khi đóng tab hoặc thiết bị ngủ.</p><button class="text-button" data-action="test-reminder-sound">Thử âm báo</button><p class="tiny muted">Trình duyệt có thể yêu cầu bật tiếng lại sau khi tải lại trang. Âm lượng phụ thuộc cài đặt thiết bị.</p></section>`;}
 function focusClock() {
   const seconds = state.focus ? Math.max(0,Math.ceil((state.focus.end-Date.now())/1000)) : duration*60;
   return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
@@ -283,11 +316,14 @@ function startFocus(taskId = null) {
   if (!state.focusNotice) {
     showModal('Trước khi bắt đầu',`<div class="modal-icon">${icon('lock')}</div><p class="modal-copy">Bản trải nghiệm web chỉ chạy bộ đếm. Tính năng khóa ứng dụng, chặn Internet và theo dõi app ở nền hiện chưa có trên bản trải nghiệm thử trên website.</p><p class="modal-copy">Bản web không yêu cầu quyền Android. Trên APK, các quyền được giải thích và xin riêng trước khi bật bảo vệ.</p><button class="button full" data-action="confirm-focus" data-task-id="${typeof taskId==='string'?esc(taskId):''}">Thử bộ đếm ${duration} phút</button>`); return;
   }
-  state.focus = {start:Date.now(),end:Date.now()+duration*60000,taskId:typeof taskId==='string'?taskId:null}; save(); render();
+  if(state.wellbeingReminders!==false)prepareReminderAudio();
+  hideWellbeing();
+  state.focus = {start:Date.now(),reminderBoundary:0,end:Date.now()+duration*60000,taskId:typeof taskId==='string'?taskId:null}; save(); render();
 }
 function recordFocus(early) {
   if (!state.focus) return;
   const seconds = Math.max(0,Math.floor((Math.min(Date.now(),state.focus.end)-state.focus.start)/1000));
+  hideWellbeing();
   state.sessions.push({seconds,day:dateKey(new Date(state.focus.start)),early}); state.focus = null;
 }
 function finishFocus(early) {
@@ -354,6 +390,8 @@ const actions = {
     state.plan.push(...aiSessions);aiSessions=[];aiDraft=null;save();modal.close();tab=1;switchPhone('app');toast('Đã thêm lịch AI sau khi bạn xác nhận.');
   },
   'confirm-plan':()=>{state.plan.push(...preview);preview=[];save();modal.close();render();toast('Đã thêm các phiên mẫu vào lịch.');},
+  'dismiss-wellbeing':hideWellbeing,
+  'test-reminder-sound':async()=>{await prepareReminderAudio();toast(reminderSound()?'Đã phát âm báo mẫu. Kiểm tra âm lượng thiết bị.':'Trình duyệt chưa cho phát tiếng. Kiểm tra quyền âm thanh của trang.');},
   duration:el=>{duration=Number(el.dataset.minutes);render();}, 'start-focus':startFocus,
   'confirm-focus':el=>{state.focusNotice=true;modal.close();startFocus(el.dataset.taskId || null);},
   'stop-focus':()=>showModal('Kết thúc phiên?',`<p class="modal-copy">Bản web sẽ ghi nhận thời gian bạn đã tập trung thực tế. Công việc của bạn chưa được đánh dấu hoàn thành.</p><button class="button full" data-action="confirm-stop">Ghi nhận và kết thúc</button><button class="text-button" data-action="close" style="width:100%;margin-top:10px">Tiếp tục tập trung</button>`),
@@ -364,7 +402,7 @@ const actions = {
   checkin:()=>{if(state.circle){state.circle.checkin=dateKey();save();render();toast('Đã ghi nhận cam kết của bạn trong bản thử.');}},
   rest:()=>{if(state.circle){state.circle.checkin=null;save();render();toast('Đã chọn nghỉ hôm nay. Bạn có thể trở lại khi sẵn sàng.');}},
   reset:()=>showModal('Bắt đầu lại bản thử?',`<p class="modal-copy">Xóa hồ sơ, công việc, lịch và nhóm trải nghiệm trên trình duyệt này. Dữ liệu trong APK không bị ảnh hưởng.</p><button class="button danger full" data-action="confirm-reset">Xóa dữ liệu và bắt đầu lại</button>`),
-  'confirm-reset':()=>{state=fresh();tab=0;selectedDay=0;preview=[];duration=30;save();switchPhone('app');}
+  'confirm-reset':()=>{hideWellbeing();state=fresh();tab=0;selectedDay=0;preview=[];duration=30;save();switchPhone('app');}
 };
 document.addEventListener('click', event=>{
   const button = event.target.closest('[data-action]'); if(!button || button.disabled) return;
@@ -377,6 +415,7 @@ document.addEventListener('input',event=>{
   }
 });
 document.addEventListener('change',event=>{
+  if(event.target.id==='wellbeing-enabled'){state.wellbeingReminders=event.target.checked;save();if(state.wellbeingReminders)prepareReminderAudio();else hideWellbeing();}
   if(event.target.hasAttribute('data-calendar-span')){calendarSpan=Number(event.target.value);changeCalendar();}
   if(event.target.name==='audience')document.getElementById('audience-note').hidden=event.target.selectedIndex===0;
 });
@@ -432,6 +471,7 @@ setInterval(()=>{
   }
   if(!state.focus)return;
   if(Date.now()>=state.focus.end){finishFocus(false);return;}
+  checkWellbeing();
   const clock=document.getElementById('focus-clock');if(clock)clock.textContent=focusClock();
 },1000);
 render();
