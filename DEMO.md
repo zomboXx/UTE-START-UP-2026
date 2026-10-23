@@ -4,7 +4,7 @@ Source cập nhật: 24/10/2026. Đường dẫn `/try/`; trang giới thiệu v
 
 ## Thiết kế và hành vi
 
-- Giao diện tham chiếu Flutter APK, cập nhật nhắc nghỉ nhẹ 0.6.2: Roboto self-host, nền #F5F5FF, xanh #2463EB, thẻ trắng, thanh 5 tab. Desktop có khung điện thoại và hướng dẫn; điện thoại sử dụng chiều cao viewport, thanh điều hướng cố định trong khung app.
+- Giao diện tham chiếu Flutter APK, cập nhật màu lịch 0.6.3: Roboto self-host, nền #F5F5FF, xanh #2463EB, thẻ trắng, thanh 5 tab. Desktop có khung điện thoại và hướng dẫn; điện thoại sử dụng chiều cao viewport, thanh điều hướng cố định trong khung app.
 - Màn chào: tên, sinh nhật, mục tiêu và chế độ khách. Nút dùng hồ sơ mẫu giúp thử mà không nhập dữ liệu cá nhân.
 - Hôm nay: công việc hôm nay/ngày mai, thêm tên/thời lượng/ghi chú, check-out có phản hồi 160 ký tự, lựa chọn quyền xem có nhãn mô phỏng, tiến độ cập nhật. Hoạt động ngoài điện thoại được nhập thời gian trong 24 giờ trước hiện tại.
 - Lịch trình: tự nhập, sửa, xóa lịch cố định hàng tuần; chặn khung trùng. Sau khi có lịch cố định mới được xem kế hoạch mẫu DBMS/CNPM/KTLT trong 3 ngày tới. Bộ xếp giờ cục bộ chọn khung 45 phút từ 08:00–22:00, tối đa 2 phiên/ngày, tránh lịch cố định và phiên đã xác nhận. Xem trước rồi xác nhận, không tự thêm.
@@ -71,3 +71,7 @@ Trong tab Tập trung có công tắc nhắc và nút Thử âm báo. Mốc 40/8
 Mốc đã nhắc lưu vào focus session trong localStorage, tránh phát trùng qua reload. Tab bị trì hoãn chỉ nhận mốc mới nhất, không phát dồn. Tắt nhắc, kết thúc hoặc check-out việc liên kết sẽ ẩn banner và ngừng nhắc. Bản web không xin quyền thông báo hệ thống, không bảo đảm nhắc khi đóng tab/thiết bị ngủ. Chưa triển khai service worker push hoặc alarm nền như Android.
 
 Đã qua ba test Playwright mới và ba test Node mới: ranh giới thời gian, nhiều mốc, lựa chọn lưu lại, kết thúc, âm thanh bị chặn, không tràn 320px. QA thêm Web Audio thật trên Edge headless, đã thấy banner báo âm được phát và không có pageerror. Không gọi AI, không tiêu credit. Vercel vẫn bị chặn; cập nhật này hiện có ở source và localhost.
+
+## Màu cột ngày 0.6.3
+
+Bảng tuần tô cả đầu cột lẫn ba ô buổi: ngày đã qua xám lạnh (#F1F3F6), hôm nay vàng kem (#FFF9E9), ngày sắp tới xanh lam nhạt (#F1F6FD). Đầu cột đậm hơn, có chú giải riêng và aria-current=date cho hôm nay. Cùng cách hiển thị trong bảng rộng và nhiều tuần. Màu tính theo ngày thực tế UTC+7, cập nhật khi qua nửa đêm; không làm thay đổi màu trạng thái/nội dung công việc. Đã QA ví dụ thứ Ba, toàn bộ ô trong cột, tuần trước/sau, đổi ngày và các test calendar hiện có.
