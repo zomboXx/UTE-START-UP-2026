@@ -1,4 +1,5 @@
-// Isolated browser demo. No API, device permissions, analytics or account connection.
+import {defaultPreferences,makePlanningRequest,convertDraft,validateAcceptance} from './planning.js';
+// Private beta AI calls use a server-only provider key. No device permissions.
 const KEY = 'brain10.web-demo.v1';
 const paths = {
   home:'m3 10 9-7 9 7v10h-6v-7H9v7H3Z', calendar:'M4 5h16v16H4ZM4 10h16M8 3v4m8-4v4',
@@ -43,6 +44,7 @@ try {
 let tab = 0, selectedDay = 0, duration = 30, preview = [], timerNotice = null;
 let phoneView = new URL(location.href).searchParams.get('view') === 'launcher' ? 'launcher' : 'app';
 let launcherMinute = -1;
+let aiBusy=false,aiDraft=null,aiSessions=[],betaCode='';
 const screen = document.getElementById('screen'), nav = document.getElementById('app-nav'), header = document.getElementById('app-header');
 const launcher = document.getElementById('launcher');
 const modal = document.getElementById('modal'), modalContent = document.getElementById('modal-content');
@@ -56,7 +58,7 @@ function unavailable(title, detail) {
   showModal(title,`<div class="modal-icon">${icon('info')}</div><p class="modal-copy">Tính năng này hiện chưa có trên bản trải nghiệm thử trên website.</p><p class="modal-copy">${esc(detail)}</p><button class="button full" data-action="close">Đã hiểu</button>`);
 }
 function openLimits() {
-  showModal('Bạn có thể thử gì?',`<p class="modal-copy">Giao diện dựa trên app Android 0.5.1. Đây là không gian thử riêng trên trình duyệt.</p><ul class="limit-list"><li><strong>Có thể thao tác:</strong> thêm việc, check-out, ghi hoạt động, sửa lịch cố định, xem và xác nhận kế hoạch mẫu, chạy bộ đếm, tạo nhóm mẫu.</li><li><strong>Widget mô phỏng:</strong> chọn Màn hình chính để thử Ghi nhanh 2×2 và Nhịp hôm nay 4×2. Widget dùng cùng dữ liệu và bộ đếm với giao diện app.</li><li><strong>Chưa có:</strong> screen time thật, khóa ứng dụng / Internet, chạy nền như Android, cài widget lên màn hình thiết bị thật, ảnh và giọng nói.</li><li><strong>Chưa kết nối:</strong> AI trực tiếp, đăng nhập, mời bạn và đồng bộ nhóm. Lịch mẫu không gọi AI.</li></ul><p class="modal-copy">Màn hình chính là mô phỏng trong trang web, không phải hệ điều hành Android. Dữ liệu lưu ở trình duyệt này, không gửi lên máy chủ ứng dụng. Xóa dữ liệu trong Hồ sơ để bắt đầu lại. Hosting có thể ghi log truy cập kỹ thuật.</p><button class="button full" data-action="close">Bắt đầu khám phá</button>`);
+  showModal('Bạn có thể thử gì?',`<p class="modal-copy">Giao diện dựa trên app Android 0.6.0. Đây là không gian thử riêng trên trình duyệt.</p><ul class="limit-list"><li><strong>Có thể thao tác:</strong> thêm việc, check-out, ghi hoạt động, sửa lịch cố định, xem và xác nhận kế hoạch mẫu, chạy bộ đếm, tạo nhóm mẫu.</li><li><strong>Widget mô phỏng:</strong> chọn Màn hình chính để thử Ghi nhanh 2×2 và Nhịp hôm nay 4×2. Widget dùng cùng dữ liệu và bộ đếm với giao diện app.</li><li><strong>Chưa có:</strong> screen time thật, khóa ứng dụng / Internet, chạy nền như Android, cài widget lên màn hình thiết bị thật, ảnh và giọng nói.</li><li><strong>Chưa kết nối:</strong> Đăng nhập, mời bạn và đồng bộ nhóm. AI thật dùng mã thử của nhóm và cần bạn chủ động gửi yêu cầu; lịch mẫu không gọi AI.</li></ul><p class="modal-copy">Màn hình chính là mô phỏng trong trang web, không phải hệ điều hành Android. Dữ liệu lưu ở trình duyệt này. Riêng khi bạn chọn tạo lịch AI, mục tiêu và ngữ cảnh lịch được gửi qua backend tới PoolAI; không gửi hồ sơ cá nhân hoặc screen time. Xóa dữ liệu trong Hồ sơ để bắt đầu lại. Hosting có thể ghi log truy cập kỹ thuật.</p><button class="button full" data-action="close">Bắt đầu khám phá</button>`);
 }
 function render(resetScroll = false) {
   const previousScroll = screen.scrollTop;
@@ -125,7 +127,7 @@ function renderWelcome() {
 function workOn(day) { return [...state.tasks,...state.plan].filter(t => t.day===day); }
 function taskRow(task) {
   const planned = task.kind==='plan', start = task.start!=null ? timeText(task.start) : 'Linh hoạt';
-  return `<article class="task-row ${task.done?'completed':''}"><button class="check-button ${task.done?'done':''}" data-action="checkout" data-id="${esc(task.id)}" aria-label="${task.done?'Xem kết quả':'Hoàn thành'} ${esc(task.title)}">${task.done?icon('check'):''}</button><div class="flex"><div class="row between"><span class="tag">${task.done?'Đã hoàn thành':planned?'Phiên học mẫu':'Việc của bạn'}</span><span class="task-time">${start}</span></div><h3>${esc(task.title)}</h3>${task.note?`<p>${esc(task.note)}</p>`:''}<div class="task-bottom"><span class="row" style="gap:3px">${icon('clock')} ${task.duration} phút</span>${!task.done?`<button class="mini-button" data-action="checkout" data-id="${esc(task.id)}">${icon('check')} Check-out</button>`:''}</div></div></article>`;
+  return `<article class="task-row ${task.done?'completed':''}"><button class="check-button ${task.done?'done':''}" data-action="checkout" data-id="${esc(task.id)}" aria-label="${task.done?'Xem kết quả':'Hoàn thành'} ${esc(task.title)}">${task.done?icon('check'):''}</button><div class="flex"><div class="row between"><span class="tag">${task.done?'Đã hoàn thành':planned?(task.source==='ai'?'Phiên học AI':'Phiên học mẫu'):'Việc của bạn'}</span><span class="task-time">${start}</span></div><h3>${esc(task.title)}</h3>${task.note?`<p>${esc(task.note)}</p>`:''}<div class="task-bottom"><span class="row" style="gap:3px">${icon('clock')} ${task.duration} phút</span>${!task.done?`<button class="mini-button" data-action="checkout" data-id="${esc(task.id)}">${icon('check')} Check-out</button>`:''}</div></div></article>`;
 }
 function renderHome() {
   const day = dateKey(dateOffset(selectedDay)), entries = workOn(day), done = entries.filter(t=>t.done).length;
@@ -154,7 +156,7 @@ function completeTask(form, skip = false) {
 }
 function renderSchedule() {
   const commitments = state.commitments.map(c=>`<div class="fixed-item row"><button class="flex" style="text-align:left;padding:0" data-action="edit-fixed" data-id="${esc(c.id)}"><strong>${esc(c.title)}</strong><small>${c.weekdays.map(n=>weekdays[n-1]).join(', ')} · ${timeText(c.start)}–${timeText(c.end)}</small></button><button class="delete-button" data-action="delete-fixed" data-id="${esc(c.id)}" aria-label="Xóa lịch ${esc(c.title)}">${icon('trash')}</button></div>`).join('');
-  screen.innerHTML = `<div class="screen-body"><h1 class="screen-title">Thời gian, theo cách của bạn.</h1><p class="screen-subtitle">Giữ chỗ cho lịch cố định. Dành phần còn lại cho mục tiêu.</p><div class="card tint"><span class="tag">01 · LỊCH CỐ ĐỊNH</span><h2 style="font-size:21px;margin:13px 0 8px">Những khung giờ không thể đổi</h2><p class="small muted">Lịch đi học, đi làm và thời gian riêng lặp lại mỗi tuần. Bạn có thể sửa bất cứ lúc nào.</p>${commitments}<button class="button secondary" style="margin-top:14px" data-action="add-fixed">${icon('plus')} Thêm lịch cố định</button></div><button class="button full" data-action="sample-plan" ${!state.commitments.length?'disabled':''}>${icon('spark')} Xem kế hoạch học mẫu</button><p class="tiny ${state.commitments.length?'muted':'blue'}" style="margin:10px 0">${state.commitments.length?'Mẫu DBMS · CNPM · KTLT, được xếp vào khung trống. Không gọi AI.':'Nhập lịch đi học / đi làm ở bước 01 trước khi xem kế hoạch mẫu.'}</p><button class="text-button" data-action="ai">Muốn lập lịch riêng với AI? ↗</button><div class="section-row"><h2>Lịch trình của bạn</h2></div>${state.plan.length?state.plan.map(p=>`<div class="card session"><div class="row between"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><span class="task-time">Lịch mẫu</span></div><h3>${esc(p.title)}</h3><p>${esc(p.note)}</p><details><summary class="text-button">Nội dung buổi ôn</summary><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul></details><div class="row between"><button class="button ${p.done?'secondary':''}" data-action="checkout" data-id="${esc(p.id)}">${p.done?'Đã hoàn thành':'Check-out'}</button><button class="text-button" data-action="delete-plan" data-id="${esc(p.id)}">Bỏ khỏi lịch</button></div></div>`).join(''):`<div class="card empty">${icon('calendar')}<h3>Chưa có phiên học nào.</h3><p>Nhập lịch cố định, rồi thử xem kế hoạch mẫu.</p></div>`}</div>`;
+  screen.innerHTML = `<div class="screen-body"><h1 class="screen-title">Thời gian, theo cách của bạn.</h1><p class="screen-subtitle">Giữ chỗ cho lịch cố định. Dành phần còn lại cho mục tiêu.</p><div class="card tint"><span class="tag">01 · LỊCH CỐ ĐỊNH</span><h2 style="font-size:21px;margin:13px 0 8px">Những khung giờ không thể đổi</h2><p class="small muted">Lịch đi học, đi làm và thời gian riêng lặp lại mỗi tuần. Bạn có thể sửa bất cứ lúc nào.</p>${commitments}<button class="button secondary" style="margin-top:14px" data-action="add-fixed">${icon('plus')} Thêm lịch cố định</button></div><button class="button full" data-action="sample-plan" ${!state.commitments.length?'disabled':''}>${icon('spark')} Xem kế hoạch học mẫu</button><p class="tiny ${state.commitments.length?'muted':'blue'}" style="margin:10px 0">${state.commitments.length?'Mẫu DBMS · CNPM · KTLT, được xếp vào khung trống. Không gọi AI.':'Nhập lịch đi học / đi làm ở bước 01 trước khi xem kế hoạch mẫu.'}</p><button class="button secondary full" data-action="study-preferences" style="margin:6px 0 10px">Nhịp học của bạn</button><button class="button full" data-action="ai">Lên kế hoạch cùng AI ↗</button><div class="section-row"><h2>Lịch trình của bạn</h2></div>${state.plan.length?state.plan.map(p=>`<div class="card session"><div class="row between"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><span class="task-time">${p.source==='ai'?'Lịch AI':'Lịch mẫu'}</span></div><h3>${esc(p.title)}</h3><p>${esc(p.note)}</p><details><summary class="text-button">Nội dung buổi ôn</summary><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul>${p.source==='ai'?`<ol class="tiny muted">${(p.steps || []).map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p>${esc(p.expectedOutput)}</p>`:''}</details><div class="row between"><button class="button ${p.done?'secondary':''}" data-action="checkout" data-id="${esc(p.id)}">${p.done?'Đã hoàn thành':'Check-out'}</button><button class="text-button" data-action="delete-plan" data-id="${esc(p.id)}">Bỏ khỏi lịch</button></div></div>`).join(''):`<div class="card empty">${icon('calendar')}<h3>Chưa có phiên học nào.</h3><p>Nhập lịch cố định, rồi thử xem kế hoạch mẫu.</p></div>`}</div>`;
 }
 function fixedEditor(id) {
   const existing = state.commitments.find(c=>c.id===id);
@@ -185,6 +187,42 @@ function samplePlan() {
     }
   }
   showModal('Xem trước kế hoạch mẫu',`<span class="tag">MẪU CÓ SẴN · KHÔNG DÙNG AI</span><p class="modal-copy" style="margin-top:12px">Kịch bản ôn DBMS, CNPM và KTLT trong 3 ngày tới. Giờ học được xếp thử vào khung 08:00–22:00, tránh lịch cố định và phiên học đã xác nhận. Nội dung không cá nhân hóa theo môn học thực tế.</p>${preview.length?preview.map(p=>`<div class="card session"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+45)}</span><h3>${esc(p.title)}</h3><p>${esc(p.note)}</p></div>`).join(''):'<p class="modal-copy">Không còn khung trống phù hợp. Bạn có thể điều chỉnh lịch cố định hoặc bỏ bớt các phiên mẫu trước.</p>'}${preview.length?'<button class="button full" data-action="confirm-plan">Xác nhận thêm vào lịch</button>':'<button class="button full" data-action="close">Đã hiểu</button>'}`);
+}
+function editStudyPreferences(){
+  const p=state.studyPreferences || defaultPreferences;
+  showModal('Nhịp học của bạn',`<form id="study-form"><div class="field-grid"><label class="field">Có thể học từ<input type="time" name="start" value="${timeText(p.startMinute)}" required></label><label class="field">Kết thúc trước<input type="time" name="end" value="${timeText(p.endMinute)}" required></label></div><label class="field">Mỗi phiên<select name="session">${[25,30,45,60,90].map(n=>`<option value="${n}" ${p.sessionMinutes===n?'selected':''}>${n} phút</option>`).join('')}</select></label><label class="field">Quỹ học mỗi ngày (phút)<input type="number" name="daily" min="25" max="480" value="${p.dailyMinutes}" required></label><p class="tiny muted">Lịch AI hỗ trợ 7 ngày tới, múi giờ Việt Nam. Lịch đã xác nhận vẫn được giữ nguyên.</p><p id="form-error" class="form-error" role="alert"></p><button class="button full">Lưu nhịp học</button></form>`);
+}
+function openAI(){
+  if(!state.commitments.length){showModal('Nhập lịch cố định trước',`<p class="modal-copy">Lưu lịch đi học / đi làm trước khi gọi AI. Bước này giúp tránh trùng giờ và không tốn lượt để hỏi lại thời khóa biểu.</p><button class="button full" data-action="add-fixed">Thêm lịch cố định</button>`);return;}
+  if(aiBusy){toast('AI đang tạo kế hoạch. Hãy chờ kết quả trước khi gửi tiếp.');return;}
+  if(aiDraft){renderAIDraft();return;}
+  const p=state.studyPreferences || defaultPreferences;
+  showModal('Kế hoạch học cùng AI',`<form id="ai-form"><span class="tag">AI THẬT · XEM TRƯỚC RỒI XÁC NHẬN</span><p class="modal-copy" style="margin-top:12px">${state.commitments.length} lịch cố định · khung ${timeText(p.startMinute)}–${timeText(p.endMinute)} · ${p.dailyMinutes} phút/ngày. Múi giờ Việt Nam.</p><label class="field">Mã thử AI của nhóm<input type="password" name="code" value="${esc(betaCode)}" autocomplete="off" maxlength="80" required placeholder="Không nhập key PoolAI"></label><span class="field-hint">Mã riêng do nhóm cung cấp, không phải API key. Chỉ giữ trong bộ nhớ tab này.</span><label class="field">Bạn muốn đạt điều gì?<textarea name="request" maxlength="4000" required placeholder="VD: DBMS kiểm tra sau 3 ngày, cần ôn JOIN…">${esc(state.profile.lastAIRequest || '')}</textarea></label><button type="button" class="text-button" data-action="ai-example">Dùng ví dụ DBMS · CNPM · KTLT</button><label class="field">Đề cương, phần còn yếu, cách học yêu thích<textarea name="learningContext" maxlength="6000" placeholder="Cung cấp phạm vi học để AI không phải đoán…">${esc(state.profile.learningContext || '')}</textarea></label><div class="notice">Khi tạo kế hoạch, mục tiêu, ngữ cảnh học, nhịp học và lịch được gửi qua backend tới PoolAI (${esc('gpt-5.4-mini')}). Không gửi họ tên, sinh nhật, nhật ký, ảnh hay screen time. Yêu cầu này có sử dụng credit AI.</div><p id="ai-error" class="form-error" role="alert"></p><button class="button full" id="ai-submit">${icon('spark')} Tạo kế hoạch để xem trước</button></form>`);
+}
+async function generateAI(data){
+  if(aiBusy || !state.commitments.length)return;
+  betaCode=String(data.get('code')).trim();
+  const request=String(data.get('request')).trim(),learningContext=String(data.get('learningContext')).trim();
+  if(!request || !betaCode)return;
+  const button=document.getElementById('ai-submit');
+  aiBusy=true;button.disabled=true;button.textContent='Đang sắp xếp kế hoạch…';
+  state.profile.lastAIRequest=request;state.profile.learningContext=learningContext;save();
+  try{
+    const response=await fetch('/api/plans',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${betaCode}`},body:JSON.stringify(makePlanningRequest(state,request,learningContext)),signal:AbortSignal.timeout(105000)});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error || 'Chưa tạo được lịch. Hãy thử lại.');
+    aiSessions=convertDraft(result);aiDraft=result;
+    if(modal.open && document.getElementById('ai-form'))renderAIDraft();else toast('Lịch AI đã sẵn sàng. Mở mục AI để xem kết quả.');
+  }catch(error){
+    const message=error.name==='TimeoutError'?'AI phản hồi quá lâu. Hãy thử lại.':error.message || 'Không kết nối được dịch vụ AI.';
+    const field=document.getElementById('ai-error');if(field)field.textContent=message;else toast(message);
+  }finally{
+    aiBusy=false;
+    if(document.getElementById('ai-submit')){button.disabled=false;button.textContent='Tạo kế hoạch để xem trước';}
+  }
+}
+function renderAIDraft(){
+  showModal('Lịch AI đề xuất',`<span class="tag">${esc(aiDraft.model || 'gpt-5.4-mini')} · CHƯA LƯU</span><h3 class="small" style="margin:15px 0">${esc(aiDraft.summary)}</h3>${aiDraft.questions.map(q=>`<p class="notice"><strong>Cần bổ sung:</strong> ${esc(q)}</p>`).join('')}${aiDraft.assumptions.map(a=>`<p class="tiny muted" style="margin-bottom:8px">Giả định: ${esc(a)}</p>`).join('')}${aiSessions.map(p=>`<article class="card session"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><h3>${esc(p.title)}</h3><p>${esc(p.subject)}</p><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul><details><summary class="text-button">Các bước học & đầu ra</summary><ol class="tiny muted">${p.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p>${esc(p.expectedOutput)}</p></details><button class="text-button" data-action="remove-ai-session" data-id="${p.id}">Bỏ phiên này</button></article>`).join('')}<p class="field-hint" style="margin:12px 0">Đối chiếu nội dung với đề cương. Chỉ thêm vào lịch sau khi bạn xác nhận; khung giờ sẽ được kiểm tra lại.</p>${aiSessions.length?'<button class="button full" data-action="accept-ai">Xác nhận thêm vào lịch</button>':''}<button class="text-button" data-action="edit-ai" style="width:100%;margin-top:8px">Chỉnh mục tiêu / bổ sung thông tin</button>`);
 }
 function renderFocus() {
   const active = !!state.focus;
@@ -250,14 +288,22 @@ const actions = {
   photo:()=>{const form=document.getElementById('activity-form');if(form){let note=form.querySelector('[data-photo-notice]');if(!note){note=document.createElement('p');note.className='notice';note.dataset.photoNotice='';form.querySelector('[data-action="photo"]').after(note);}note.textContent='Tính năng thêm ảnh hiện chưa có trên bản trải nghiệm thử trên website. Bạn vẫn có thể lưu tên và thời gian hoạt động.';}},
   login:()=>unavailable('Lưu tiến trình & đăng nhập','Đăng nhập Google, Facebook, số điện thoại và đồng bộ tài khoản chưa được kết nối. Hãy tiếp tục với chế độ khách.'),
   widgets:()=>switchPhone('launcher'),
-  ai:()=>unavailable('Lập lịch riêng với AI','AI trực tiếp đang tạm ngừng thử nghiệm. Bản web cung cấp kịch bản học mẫu, không gửi thông tin hay gọi model qua API.'),
+  ai:openAI,
   'screen-time':()=>unavailable('Screen time trên Android','Đọc thời gian sử dụng ứng dụng cần Usage Access trên Android. Website không yêu cầu quyền này và không thể lấy lịch sử sử dụng app của thiết bị.'),
-  protection:()=>unavailable('Bảo vệ tập trung trên Android','APK xin Accessibility để phát hiện ứng dụng cần hạn chế, VPN cục bộ để chặn mạng trong phiên và thông báo nếu bạn cho phép. Bản web không có các quyền đó, không đọc nội dung tin nhắn và không gửi dữ liệu trải nghiệm lên API.'),
+  protection:()=>unavailable('Bảo vệ tập trung trên Android','APK xin Accessibility để phát hiện ứng dụng cần hạn chế, VPN cục bộ để chặn mạng trong phiên và thông báo nếu bạn cho phép. Bản web không có các quyền đó, không đọc nội dung tin nhắn. Chỉ thông tin lập lịch bạn chủ động gửi mới tới API.'),
   invite:()=>unavailable('Mời bạn đồng hành','Mời thành viên, chia sẻ thực và đồng bộ nhóm chưa được triển khai. Những tên bạn thêm vào đây chỉ là dữ liệu mẫu trên trình duyệt.'),
   'add-fixed':()=>fixedEditor(), 'edit-fixed':el=>fixedEditor(el.dataset.id),
   'delete-fixed':el=>{state.commitments=state.commitments.filter(c=>c.id!==el.dataset.id);save();render();toast('Đã bỏ lịch cố định.');},
   'delete-plan':el=>{state.plan=state.plan.filter(p=>p.id!==el.dataset.id);save();render();},
   'sample-plan':samplePlan,
+  'ai-example':()=>{const field=document.querySelector('#ai-form [name="request"]');if(field)field.value='Tôi kiểm tra DBMS trong 3 ngày nữa, CNPM trong 4 ngày nữa, KTLT trong 5 ngày nữa. Hãy lập lịch ôn và nội dung từng buổi.';},
+  'study-preferences':editStudyPreferences,
+  'edit-ai':()=>{aiDraft=null;openAI();},
+  'remove-ai-session':el=>{aiSessions=aiSessions.filter(p=>p.id!==el.dataset.id);renderAIDraft();},
+  'accept-ai':()=>{
+    const invalid=validateAcceptance(aiSessions,state);if(invalid){toast(invalid);return;}
+    state.plan.push(...aiSessions);aiSessions=[];aiDraft=null;save();modal.close();tab=1;switchPhone('app');toast('Đã thêm lịch AI sau khi bạn xác nhận.');
+  },
   'confirm-plan':()=>{state.plan.push(...preview);preview=[];save();modal.close();render();toast('Đã thêm các phiên mẫu vào lịch.');},
   duration:el=>{duration=Number(el.dataset.minutes);render();}, 'start-focus':startFocus,
   'confirm-focus':el=>{state.focusNotice=true;modal.close();startFocus(el.dataset.taskId || null);},
@@ -289,6 +335,12 @@ document.addEventListener('submit',event=>{
   const data=new FormData(form), title=String(data.get('title') || '').trim();
   const error=message=>{document.getElementById('form-error').textContent=message;};
   switch(formId){
+    case 'ai-form':generateAI(data);break;
+    case 'study-form':{
+      const start=minuteValue(String(data.get('start'))),end=minuteValue(String(data.get('end'))),session=Number(data.get('session')),daily=Number(data.get('daily'));
+      if(start>=end || end-start<session || daily<session || daily>480){error('Khung giờ và quỹ học cần đủ cho ít nhất một phiên, tối đa 480 phút/ngày.');return;}
+      state.studyPreferences={startMinute:start,endMinute:end,sessionMinutes:session,dailyMinutes:daily};save();modal.close();render();toast('Đã lưu nhịp học.');break;
+    }
     case 'welcome-form': {
       const name=String(data.get('name')).trim(), birthday=String(data.get('birthday'));
       if(!name || birthday>dateKey())return;

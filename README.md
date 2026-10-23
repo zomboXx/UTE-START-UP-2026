@@ -2,13 +2,14 @@
 
 Website công khai: https://brain10-ute-startup2026.vercel.app — đã triển khai Vercel và nối repo GitHub, ngày 19/10/2026.
 
-Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Trang `/try/` bổ sung bản trải nghiệm tương tác dựa trên giao diện APK 0.5.1; đây là bản thử cục bộ trên trình duyệt, không thay thế ứng dụng Android.
+Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Trang `/try/` bổ sung bản trải nghiệm tương tác dựa trên giao diện APK 0.6.0; đây là bản thử cục bộ trên trình duyệt, không thay thế ứng dụng Android.
 
 ## Chạy local
 
-Cần Node.js, không cần cài dependencies:
+Cần Node.js 22+ và dependencies backend:
 
 ```sh
+npm ci
 npm start
 ```
 
@@ -24,9 +25,11 @@ dist/
   style.css        Responsive layout
   site.js          Menu, FAQ/dialog, thông tin tải
   release.json     Metadata phát hành, không chứa file APK
-  try/             Giao diện trải nghiệm web độc lập, không gọi API
+  try/             Giao diện trải nghiệm web và luồng AI có xác nhận
   assets/          Logo, font có license, ảnh giao diện app
-server.mjs         Preview cục bộ; không dùng làm server Vercel
+api/plans.mjs      Vercel Function, mã thử beta, không chứa key
+server/planner.mjs Slot / JSON Schema / gọi model / kiểm tra draft
+server.mjs         Preview cục bộ và handler AI local
 vercel.json        Cấu hình static deployment
 ```
 
@@ -38,9 +41,9 @@ Import repository `zomboXx/UTE-START-UP-2026` vào tài khoản Vercel có quy�
 - Root Directory: thư mục gốc repo.
 - Build Command: để trống.
 - Output Directory: **dist** (đã khai báo trong vercel.json).
-- Không cần biến môi trường cho landing page.
+- Landing page không cần biến môi trường. AI thật cần Secret `POOL_API_KEY` ở Production; không đưa key vào client. Handler API đã có trong repo.
 
-Đây là trang HTML/CSS/JS tĩnh; `server.mjs` chỉ phục vụ xem local và APK local. Không thêm file APK vào `dist` hay Git. [Tài liệu Vercel](https://vercel.com/docs/builds/configure-a-build).
+Landing là HTML/CSS/JS tĩnh; AI dùng Vercel Function `/api/plans` (Android tương thích `/v1/plans`). `server.mjs` phục vụ xem và gọi AI khi chạy local. Không thêm file APK vào `dist` hay Git. [Tài liệu Vercel](https://vercel.com/docs/builds/configure-a-build).
 
 Đã deploy sau khi người dùng cho phép: project `brain10-ute-startup2026`, repo GitHub nối với Vercel, domain công khai đã kiểm tra từ phiên không đăng nhập. Vercel Authentication được tắt riêng cho project website công khai này.
 
@@ -69,8 +72,16 @@ GitHub chặn file trên 100 MiB trong Git; bản APK debug hiện khoảng 163 
 
 ## Kiểm tra
 
-`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 9 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu, bản trải nghiệm và widget mô phỏng. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
+`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 10 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu, bản trải nghiệm và widget mô phỏng. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
 
 Logo/wordmark mới do nhóm cung cấp được lưu nguyên bản tại `dist/assets/brand-source.png`. SVG viewport hiển thị icon và tên trên header, footer, favicon, giao diện app và màn hình chính mô phỏng. `/try/?view=launcher` mở trực tiếp màn hình chính với hai widget tương tác; đây không phải widget cài lên thiết bị thật.
 
 Font Plus Jakarta Sans: Google Fonts, SIL Open Font License; xem `dist/assets/OFL-Jakarta.txt`. Repo chưa được gán giấy phép mã nguồn thay mặt chủ sở hữu.
+
+## AI beta 0.6.0 — trạng thái 23/10/2026
+
+Key mới đã được kiểm tra với PoolAI; web local có luồng AI thật từ nhập lịch đến xác nhận. `npm run test:server` có 3 test handler và chuyển đổi draft, không gọi model. `scripts/smoke-ai-live.mjs --run-live` mới gọi thật và có sử dụng credit.
+
+Tự thêm key lên đúng project/team Vercel bị HTTP 402 `resource_creation_blocked`: team vượt fair-use limits. Chủ tài khoản cũng xác nhận bị chặn trong dashboard. Vì vậy chưa cấu hình Secret và chưa xác nhận deploy bản AI lên domain công khai. Không tự đổi gói/thanh toán hoặc tạo project khác để lách giới hạn. Xem `../../docs/BRAIN10_AI_BETA_06.md` trong workspace để chạy local và chuyển sang public khi team được mở chặn.
+
+Bản AI thật cần mã beta riêng của nhóm, khác key PoolAI. Chạy `node scripts/prepare-ai-beta.mjs` với environment key để tạo file riêng ngoài repo website. Chỉ dữ liệu lập lịch được gửi khi người dùng chủ động chọn tạo kế hoạch; tên/sinh nhật/ảnh/nhật ký/screen time không có trong payload.

@@ -3,6 +3,8 @@
   "framework": null,
   "buildCommand": "",
   "outputDirectory": "dist",
+  "functions": { "api/plans.mjs": { "maxDuration": 120 } },
+  "rewrites": [{"source":"/v1/plans","destination":"/api/plans"}],
   "headers": [
     { "source": "/(.*)", "headers": [
       {"key":"X-Content-Type-Options","value":"nosniff"},

@@ -1,4 +1,5 @@
 import http from 'node:http';
+import planHandler from './api/plans.mjs';
 import {readFile,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import path from 'node:path';
@@ -11,6 +12,7 @@ const port=Number(process.env.PORT || 4174);
 const downloadable=async()=>{try{return (await stat(apk)).isFile();}catch{return false;}};
 http.createServer(async(req,res)=>{
   try {
+    if(['/api/plans','/v1/plans'].includes(new URL(req.url,'http://localhost').pathname)){await planHandler(req,res);return;}
     if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
     const url=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(url==='/release.json'){
