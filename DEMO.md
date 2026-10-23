@@ -13,6 +13,17 @@ Ngày triển khai: 23/10/2026. Đường dẫn `/try/`; trang giới thiệu v�
 - Thống kê: biểu đồ số việc đã check-out trong 7 ngày, tổng thời gian tập trung và số hoạt động trong bản thử. Không tạo dữ liệu screen time giả.
 - Nhóm: tạo vòng tròn mẫu, tên đồng hành, check-in hoặc nghỉ hôm nay; mọi trạng thái đều cục bộ và được dán nhãn.
 
+## Màn hình chính và nhận diện mới
+
+Logo brain10 do nhóm gửi ngày 23/10/2026 được giữ nguyên file gốc; hiển thị qua SVG viewport, không vẽ lại chữ hoặc biểu tượng. Header/footer website, favicon, header app và icon launcher cùng dùng nhận diện này. Chưa thay đổi logo trong APK.
+
+Chọn **Màn hình chính · Widgets** ở thanh chuyển bên trên điện thoại, hoặc dùng `/try/?view=launcher`. Nút thanh cử chỉ dưới điện thoại cũng đưa về màn hình chính. Icon brain10 và nút Ứng dụng mở lại giao diện app; các tab và bộ đếm được giữ khi chuyển.
+
+- Widget 4×2 Nhịp hôm nay: tiến độ, việc hiện tại, việc tiếp theo, khung giờ và bộ đếm khi có phiên đang chạy. Ưu tiên phiên học đang đến giờ. Không liên kết một việc tùy ý vào phiên tập trung đã bắt đầu độc lập.
+- Widget 2×2 Ghi nhanh: ô nhập nhanh, shortcut 30 phút, microphone. Thêm việc qua widget mặc định ngày mai nếu toàn bộ việc hôm nay đã hoàn thành. Microphone có thông báo chưa hỗ trợ, không bật quyền thu âm.
+- Bắt đầu từ shortcut liên kết phiên với việc hiện tại, sử dụng cùng thông báo giới hạn tập trung trước lần đầu. Check-out việc đó sẽ cập nhật tiến độ và ghi nhận thời gian thực tế, kết thúc phiên đúng một lần.
+- Dữ liệu và trạng thái trống/hoàn thành phản ánh cùng localStorage với app demo. Đồng hồ là giờ trình duyệt; wallpaper, thanh hệ thống và màn hình chính chỉ là mô phỏng bằng HTML/CSS.
+
 ## Tính năng chưa có trên bản web
 
 Screen time Android, chặn ứng dụng / Internet, bảo vệ nền, widget hệ thống, giọng nói, ảnh, đăng nhập, AI trực tiếp, lời mời và đồng bộ nhóm. Khi chọn, người dùng nhận thông báo rõ ràng. Ảnh minh chứng có thông báo ngay trong form để giữ các trường đã nhập.
@@ -27,7 +38,7 @@ Roboto lấy từ bộ font Flutter có sẵn, license Apache 2.0 lưu tại `di
 
 ## Kiểm chứng
 
-`npm run check` và `npm test` (6 bài):
+`npm run check` và `npm test` (9 bài):
 
 1. Trang giới thiệu giữ nội dung, link demo hoạt động, không tràn ngang và thanh tab trong viewport ở 1440×1000, 390×844, 320×640, 844×390.
 2. Thêm việc, giữ sau reload, escape nội dung HTML, check-out cập nhật tiến độ và biểu đồ.
@@ -35,5 +46,8 @@ Roboto lấy từ bộ font Flutter có sẵn, license Apache 2.0 lưu tại `di
 4. Thông báo trước focus, timer qua reload và ghi thời gian thực tế bằng đồng hồ trình duyệt giả lập trong test.
 5. Nhóm mẫu, check-in, thông báo lời mời chưa có, xóa dữ liệu.
 6. Kiểm tra giới hạn 24 giờ và giữ nội dung form khi chọn ảnh chưa hỗ trợ.
+7. Link mở trực tiếp launcher, yêu cầu thiết lập hồ sơ, logo mới, thêm việc từ widget và giữ dữ liệu khi reload/chuyển vào app.
+8. Shortcut tập trung 30 phút, bộ đếm chung qua đồng hồ giả lập, check-out kết thúc đúng phiên liên kết và ghi nhận một lần.
+9. Trạng thái hoàn thành, đề xuất thêm việc ngày mai, thông báo microphone, không tràn ngang và widget trong bề ngang khung máy ở desktop/390/320/ngang.
 
 QA hình ảnh thực tế ở `screenshots/demo-*.png`, không commit. Chưa kiểm chứng trực tiếp Safari/iPhone hoặc Firefox.

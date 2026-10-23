@@ -69,6 +69,8 @@ GitHub chặn file trên 100 MiB trong Git; bản APK debug hiện khoảng 163 
 
 ## Kiểm tra
 
-`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 6 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu và bản trải nghiệm. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
+`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 9 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu, bản trải nghiệm và widget mô phỏng. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
+
+Logo/wordmark mới do nhóm cung cấp được lưu nguyên bản tại `dist/assets/brand-source.png`. SVG viewport hiển thị icon và tên trên header, footer, favicon, giao diện app và màn hình chính mô phỏng. `/try/?view=launcher` mở trực tiếp màn hình chính với hai widget tương tác; đây không phải widget cài lên thiết bị thật.
 
 Font Plus Jakarta Sans: Google Fonts, SIL Open Font License; xem `dist/assets/OFL-Jakarta.txt`. Repo chưa được gán giấy phép mã nguồn thay mặt chủ sở hữu.

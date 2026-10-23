@@ -7,3 +7,4 @@
 @media(max-width:360px){.hero h1{font-size:47px}.hero-actions{gap:15px}.hero-actions .quiet-link{font-size:9px}.hero .pill{font-size:6px;letter-spacing:.5px}.hero-visual{height:520px}.phone{width:207px}.top-label{left:-5px;font-size:9px;top:105px}.bottom-label{right:-6px;font-size:9px;bottom:90px}.orbit{width:270px}.orbit-two{width:310px}.floating-label small{font-size:7px}.hero-footnote{font-size:7px}.download-card{padding:22px}.release-meta{font-size:8px}.notebook-row h3{font-size:12px}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
 main{overflow-x:clip}.focus-feature .illustration-label{background:none;color:#8395b1;padding:0}
+.brand .brand-lockup{display:block;width:128px;height:37px}.footer .brand .brand-lockup{width:116px;height:34px}@media(max-width:620px){.brand .brand-lockup{width:112px;height:33px}}

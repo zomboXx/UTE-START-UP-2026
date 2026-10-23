@@ -7,28 +7,32 @@
   <meta name="theme-color" content="#f5f5ff">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/try/demo.css">
+  <link rel="stylesheet" href="/try/launcher.css">
   <script src="/try/demo.js" defer></script>
 </head>
 <body>
-  <header class="web-header"><a href="/" class="web-brand"><img src="/assets/icon.svg" alt="" width="28" height="28">brain10 <span>/ trải nghiệm thử</span></a><a href="/" class="back-site">← Trang giới thiệu</a></header>
+  <header class="web-header"><a href="/" class="web-brand" aria-label="brain10 — trang giới thiệu"><svg class="brand-lockup" viewBox="194 239 1008 292" role="img" aria-label="brain10"><image href="/assets/brand-source.png" width="1376" height="768"/></svg><span>/ trải nghiệm thử</span></a><a href="/" class="back-site">← Trang giới thiệu</a></header>
   <main class="demo-layout">
     <aside class="demo-guide">
       <span class="eyebrow">TỪ APP ANDROID · 0.5.1</span>
       <h1>Một ngày có<br><em>chủ đích.</em></h1>
-      <p>Chạm, thêm một việc, rồi thử hoàn thành nó. Làm quen với Brain10 theo nhịp của bạn.</p>
+      <p>Từ màn hình chính đến khoảng tập trung. Chạm vào widget, thêm một việc, rồi thử hoàn thành nó.</p>
       <ol class="guide-steps"><li><span>01</span><div><strong>Chọn điều quan trọng</strong><small>Thêm việc ở tab Hôm nay.</small></div></li><li><span>02</span><div><strong>Giữ chỗ cho thời gian</strong><small>Nhập lịch cố định, xem kế hoạch mẫu.</small></div></li><li><span>03</span><div><strong>Tập trung & nhìn lại</strong><small>Thử bộ đếm và check-out công việc.</small></div></li></ol>
       <div class="demo-explainer"><span class="status-dot"></span><strong>Bản thử trong trình duyệt</strong><p>Dữ liệu mẫu và thao tác được lưu riêng trên trình duyệt này, không đồng bộ với APK. Những tính năng cần Android sẽ có thông báo khi bạn chọn.</p><button data-action="limits" class="text-button">Xem những gì có thể thử ↗</button></div>
       <a href="/#download" class="download-link">Khám phá bản Android <span>↗</span></a>
     </aside>
     <section class="phone-stage" aria-label="Giao diện ứng dụng Brain10">
       <div class="preview-label"><span class="status-dot"></span> BẢN TRẢI NGHIỆM WEB <button data-action="limits" aria-label="Thông tin bản trải nghiệm">ⓘ</button></div>
+      <div class="device-controls" role="group" aria-label="Chọn giao diện điện thoại"><button data-action="app-view" aria-pressed="true">Ứng dụng</button><button data-action="launcher-view" aria-pressed="false">Màn hình chính <span>Widgets</span></button></div>
       <div class="app-device" id="device">
+        <section id="launcher" class="launcher" aria-label="Màn hình chính điện thoại mô phỏng" hidden></section>
         <header class="app-header" id="app-header"></header>
         <div id="screen" class="app-content" tabindex="-1"></div>
         <nav id="app-nav" class="app-nav" aria-label="Các tab ứng dụng"></nav>
+        <button class="system-home" data-action="launcher-view" aria-label="Về màn hình chính điện thoại"><span></span></button>
         <div id="toast" class="toast" role="status" aria-live="polite"></div>
       </div>
-      <p class="preview-foot">Giao diện mô phỏng từ APK · Không cần cài đặt</p>
+      <p class="preview-foot">Màn hình chính & widget mô phỏng · Không cài lên thiết bị thật</p>
     </section>
     <aside class="demo-note"><span>KHÔNG CẦN TÀI KHOẢN</span><p>Một việc mỗi lúc.<br>Một bước tiến mới.</p><button class="text-button" data-action="welcome">Thử màn chào ban đầu ↗</button></aside>
   </main>
