@@ -1,4 +1,5 @@
 import {defaultPreferences,makePlanningRequest,convertDraft,validateAcceptance} from './planning.js';
+import {periods,vietnamDay,addDays,weekStart,startTime,sessionStatus,calendarWeeks} from './calendar.js';
 // Private beta AI calls use a server-only provider key. No device permissions.
 const KEY = 'brain10.web-demo.v1';
 const paths = {
@@ -45,12 +46,14 @@ let tab = 0, selectedDay = 0, duration = 30, preview = [], timerNotice = null;
 let phoneView = new URL(location.href).searchParams.get('view') === 'launcher' ? 'launcher' : 'app';
 let launcherMinute = -1;
 let aiBusy=false,aiDraft=null,aiSessions=[],betaCode='';
+let scheduleView='list',calendarStart=weekStart(vietnamDay(Date.now())),calendarSpan=1,lastScheduleMinute=-1;
 const screen = document.getElementById('screen'), nav = document.getElementById('app-nav'), header = document.getElementById('app-header');
 const launcher = document.getElementById('launcher');
 const modal = document.getElementById('modal'), modalContent = document.getElementById('modal-content');
 function save() { try { localStorage.setItem(KEY,JSON.stringify(state)); } catch { storageAvailable = false; toast('Trình duyệt chưa cho lưu dữ liệu. Bạn vẫn có thể thử trong phiên này.'); } }
 function toast(message) { const el = document.getElementById('toast'); el.textContent = message; el.classList.add('visible'); clearTimeout(timerNotice); timerNotice = setTimeout(() => el.classList.remove('visible'),4500); }
 function showModal(title, content) {
+  modal.classList.remove('calendar-expanded');
   modalContent.innerHTML = `<div class="modal-top"><h2 id="modal-title">${esc(title)}</h2><button class="icon-button" data-action="close" aria-label="Đóng">${icon('close')}</button></div>${content}`;
   if (!modal.open) modal.showModal();
 }
@@ -154,9 +157,48 @@ function completeTask(form, skip = false) {
   task.audience = skip?'Chỉ mình tôi':form.elements.audience.value;
   save(); modal.close(); render(); toast('Đã ghi nhận. Một bước nhỏ, một việc trọn vẹn.');
 }
+function statusMarkup(entry){
+  const status=sessionStatus(entry);
+  return `<span class="schedule-tag" data-state="${status.key}">${status.label}</span>${status.checkout?'<span class="schedule-tag unchecked">Chưa check-out</span>':''}${status.relative?`<span class="schedule-relative">${status.relative}</span>`:''}`;
+}
+function statusRow(entry){return `<div class="session-status" data-entry-id="${esc(entry.fixed?entry.commitmentId:entry.id)}" data-day="${esc(entry.day)}" data-fixed="${!!entry.fixed}">${statusMarkup(entry)}</div>`;}
+function scheduleCard(p){
+  return `<article class="card session" data-session-id="${esc(p.id)}"><div class="row between"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><span class="task-time">${p.source==='ai'?'Lịch AI':'Lịch mẫu'}</span></div>${statusRow(p)}<h3>${esc(p.title)}</h3><p>${esc(p.note || p.subject || '')}</p><details><summary class="text-button">Nội dung buổi ôn</summary><ul>${(p.objectives || []).map(o=>`<li>${esc(o)}</li>`).join('')}</ul><ol class="tiny muted">${(p.steps || []).map(step=>`<li>${esc(step)}</li>`).join('')}</ol>${p.expectedOutput?`<p>${esc(p.expectedOutput)}</p>`:''}</details><div class="row between"><button class="button ${p.done?'secondary':''}" data-action="checkout" data-id="${esc(p.id)}">${p.done?'Đã hoàn thành':'Check-out'}</button><button class="text-button" data-action="delete-plan" data-id="${esc(p.id)}">Bỏ khỏi lịch</button></div></article>`;
+}
+function calendarEntry(id,day,fixed=false){
+  if(!fixed)return state.plan.find(p=>p.id===id) || state.tasks.find(p=>p.id===id);
+  const c=state.commitments.find(c=>c.id===id);
+  return c?{id:`fixed:${c.id}:${day}`,commitmentId:c.id,title:c.title,day,start:c.start,duration:c.end-c.start,fixed:true}:null;
+}
+function calendarEvent(p){
+  const status=sessionStatus(p),label=p.subject || p.title;
+  return `<button class="calendar-event" data-action="session-detail" data-id="${esc(p.fixed?p.commitmentId:p.id)}" data-day="${p.day}" data-fixed="${!!p.fixed}" data-state="${status.key}" aria-label="${esc(`${p.title}, ${dayLabel(p.day)} ${timeText(p.start)}, ${status.label}`)}" title="${esc(p.title)}"><span class="event-top"><time>${timeText(p.start)}</time><i aria-hidden="true"></i></span><strong>${esc(label)}</strong>${p.subject && p.subject!==p.title?`<span class="event-name">${esc(p.title)}</span>`:''}${p.fixed?'<span class="event-fixed">Cố định</span>':''}</button>`;
+}
+function calendarBoard(){
+  const weeks=calendarWeeks(state,calendarStart,calendarSpan),today=vietnamDay(Date.now());
+  const last=addDays(calendarStart,calendarSpan*7-1);
+  const unplaced=state.tasks.filter(t=>t.day>=calendarStart && t.day<=last);
+  return `<div class="calendar-navigation"><button class="icon-button" data-action="calendar-prev" aria-label="Tuần trước">‹</button><div><strong>${dayLabel(calendarStart)} – ${dayLabel(last)}<span class="calendar-year"> / ${last.slice(0,4)}</span></strong><button class="text-button" data-action="calendar-today">Về tuần này</button></div><button class="icon-button" data-action="calendar-next" aria-label="Tuần sau">›</button></div><div class="calendar-options"><label>Số tuần <select data-calendar-span aria-label="Số tuần hiển thị">${[1,2,4].map(n=>`<option value="${n}" ${calendarSpan===n?'selected':''}>${n} tuần</option>`).join('')}</select></label><button class="text-button" data-action="calendar-expand">${icon('focus')} Xem rộng</button></div><p class="calendar-hint">Giờ Việt Nam · Chạm vào một buổi để xem chi tiết.</p><div class="calendar-scroll">${weeks.map((week,i)=>`<table class="week-table" aria-label="Lịch tuần ${dayLabel(week.first)}"><caption>${calendarSpan>1?`Tuần ${i+1} · `:''}${dayLabel(week.first)} – ${dayLabel(week.days[6])}</caption><colgroup><col class="period-column">${week.days.map(()=>'<col>').join('')}</colgroup><thead><tr><th scope="col">Buổi</th>${week.days.map((day,d)=>`<th scope="col" data-calendar-day="${day}" class="${day===today?'is-today':''}"><span>${weekdays[d]}</span><time>${dayLabel(day)}</time></th>`).join('')}</tr></thead><tbody>${periods.map((period,r)=>`<tr><th scope="row"><strong>${period.label}</strong><small>${period.range}</small></th>${week.days.map((day,d)=>`<td data-cell="${day}:${r}" aria-label="${period.label}, ${weekdays[d]}, ${dayLabel(day)}">${week.cells[r][d].map(calendarEvent).join('') || '<span class="calendar-empty" aria-hidden="true">·</span>'}</td>`).join('')}</tr>`).join('')}</tbody></table>`).join('')}</div><div class="calendar-legend"><span><i data-state="upcoming"></i>Sắp tới</span><span><i data-state="active"></i>Đang diễn ra</span><span><i data-state="overdue"></i>Quá hạn</span><span><i data-state="done"></i>Hoàn thành</span></div>${unplaced.length?`<section class="unplaced-tasks"><h3>Việc chưa đặt giờ <span>${unplaced.length}</span></h3><p class="tiny muted">Những việc này chưa có giờ bắt đầu, nên chưa xếp vào buổi.</p>${unplaced.map(t=>`<button data-action="session-detail" data-id="${esc(t.id)}" class="unplaced-task"><span>${dayLabel(t.day)}</span><strong>${esc(t.title)}</strong>${t.done?icon('check'):icon('arrow')}</button>`).join('')}</section>`:''}<p class="calendar-hint">Lịch cố định lặp theo cấu hình hiện tại. Bảng có thể xem nhiều tuần; AI hiện lập lịch trong 7 ngày tới.</p>`;
+}
 function renderSchedule() {
-  const commitments = state.commitments.map(c=>`<div class="fixed-item row"><button class="flex" style="text-align:left;padding:0" data-action="edit-fixed" data-id="${esc(c.id)}"><strong>${esc(c.title)}</strong><small>${c.weekdays.map(n=>weekdays[n-1]).join(', ')} · ${timeText(c.start)}–${timeText(c.end)}</small></button><button class="delete-button" data-action="delete-fixed" data-id="${esc(c.id)}" aria-label="Xóa lịch ${esc(c.title)}">${icon('trash')}</button></div>`).join('');
-  screen.innerHTML = `<div class="screen-body"><h1 class="screen-title">Thời gian, theo cách của bạn.</h1><p class="screen-subtitle">Giữ chỗ cho lịch cố định. Dành phần còn lại cho mục tiêu.</p><div class="card tint"><span class="tag">01 · LỊCH CỐ ĐỊNH</span><h2 style="font-size:21px;margin:13px 0 8px">Những khung giờ không thể đổi</h2><p class="small muted">Lịch đi học, đi làm và thời gian riêng lặp lại mỗi tuần. Bạn có thể sửa bất cứ lúc nào.</p>${commitments}<button class="button secondary" style="margin-top:14px" data-action="add-fixed">${icon('plus')} Thêm lịch cố định</button></div><button class="button full" data-action="sample-plan" ${!state.commitments.length?'disabled':''}>${icon('spark')} Xem kế hoạch học mẫu</button><p class="tiny ${state.commitments.length?'muted':'blue'}" style="margin:10px 0">${state.commitments.length?'Mẫu DBMS · CNPM · KTLT, được xếp vào khung trống. Không gọi AI.':'Nhập lịch đi học / đi làm ở bước 01 trước khi xem kế hoạch mẫu.'}</p><button class="button secondary full" data-action="study-preferences" style="margin:6px 0 10px">Nhịp học của bạn</button><button class="button full" data-action="ai">Lên kế hoạch cùng AI ↗</button><div class="section-row"><h2>Lịch trình của bạn</h2></div>${state.plan.length?state.plan.map(p=>`<div class="card session"><div class="row between"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><span class="task-time">${p.source==='ai'?'Lịch AI':'Lịch mẫu'}</span></div><h3>${esc(p.title)}</h3><p>${esc(p.note)}</p><details><summary class="text-button">Nội dung buổi ôn</summary><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul>${p.source==='ai'?`<ol class="tiny muted">${(p.steps || []).map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p>${esc(p.expectedOutput)}</p>`:''}</details><div class="row between"><button class="button ${p.done?'secondary':''}" data-action="checkout" data-id="${esc(p.id)}">${p.done?'Đã hoàn thành':'Check-out'}</button><button class="text-button" data-action="delete-plan" data-id="${esc(p.id)}">Bỏ khỏi lịch</button></div></div>`).join(''):`<div class="card empty">${icon('calendar')}<h3>Chưa có phiên học nào.</h3><p>Nhập lịch cố định, rồi thử xem kế hoạch mẫu.</p></div>`}</div>`;
+  const commitments=state.commitments.map(c=>`<div class="fixed-item row"><button class="flex" style="text-align:left;padding:0" data-action="edit-fixed" data-id="${esc(c.id)}"><strong>${esc(c.title)}</strong><small>${c.weekdays.map(n=>weekdays[n-1]).join(', ')} · ${timeText(c.start)}–${timeText(c.end)}</small></button><button class="delete-button" data-action="delete-fixed" data-id="${esc(c.id)}" aria-label="Xóa lịch ${esc(c.title)}">${icon('trash')}</button></div>`).join('');
+  const plan=[...state.plan].sort((a,b)=>startTime(a)-startTime(b));
+  screen.innerHTML=`<div class="screen-body"><h1 class="screen-title">Thời gian, theo cách của bạn.</h1><p class="screen-subtitle">Giữ chỗ cho lịch cố định. Dành phần còn lại cho mục tiêu.</p><div class="card tint"><span class="tag">01 · LỊCH CỐ ĐỊNH</span><h2 style="font-size:21px;margin:13px 0 8px">Những khung giờ không thể đổi</h2><p class="small muted">Lịch đi học, đi làm và thời gian riêng lặp lại mỗi tuần. Bạn có thể sửa bất cứ lúc nào.</p>${commitments}<button class="button secondary" style="margin-top:14px" data-action="add-fixed">${icon('plus')} Thêm lịch cố định</button></div><button class="button full" data-action="sample-plan" ${!state.commitments.length?'disabled':''}>${icon('spark')} Xem kế hoạch học mẫu</button><p class="tiny ${state.commitments.length?'muted':'blue'}" style="margin:10px 0">${state.commitments.length?'Mẫu DBMS · CNPM · KTLT, được xếp vào khung trống. Không gọi AI.':'Nhập lịch đi học / đi làm ở bước 01 trước khi xem kế hoạch mẫu.'}</p><button class="button secondary full" data-action="study-preferences" style="margin:6px 0 10px">Nhịp học của bạn</button><button class="button full" data-action="ai">Lên kế hoạch cùng AI ↗</button><div class="section-row"><h2>Lịch trình của bạn</h2></div><div class="schedule-view-switch" role="group" aria-label="Cách xem lịch"><button data-action="schedule-list" aria-pressed="${scheduleView==='list'}">${icon('check')} Đầu việc</button><button data-action="schedule-calendar" aria-pressed="${scheduleView==='calendar'}">${icon('calendar')} Bảng lịch</button></div>${scheduleView==='calendar'?`<section class="calendar-panel" aria-label="Bảng lịch theo tuần">${calendarBoard()}</section>`:plan.length?plan.map(scheduleCard).join(''):`<div class="card empty">${icon('calendar')}<h3>Chưa có phiên học nào.</h3><p>Nhập lịch cố định, rồi thử xem kế hoạch mẫu.</p></div>`}</div>`;
+}
+function openSession(id,day,fixed){
+  const p=calendarEntry(id,day,fixed);if(!p)return;
+  showModal('Chi tiết hoạt động',`<span class="tag">${p.fixed?'Lịch cố định':p.source==='ai'?'Lịch AI':p.kind==='plan'?'Phiên học':'Việc của bạn'}</span><h3 class="session-detail-title">${esc(p.title)}</h3><p class="modal-copy">${dayLabel(p.day)}${p.start!=null?` · ${timeText(p.start)}–${timeText(p.start+p.duration)}`:' · Chưa đặt giờ'}</p>${statusRow(p)}${p.subject?`<p class="small blue">${esc(p.subject)}</p>`:''}${p.note?`<p class="modal-copy">${esc(p.note)}</p>`:''}${p.objectives?.length?`<h3 class="detail-heading">Mục tiêu buổi học</h3><ul class="limit-list">${p.objectives.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}${p.steps?.length?`<h3 class="detail-heading">Các bước thực hiện</h3><ol class="limit-list">${p.steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}${p.expectedOutput?`<div class="notice"><strong>Đầu ra cần đạt</strong><p>${esc(p.expectedOutput)}</p></div>`:''}${p.fixed?'<p class="notice">Khung giờ lặp lại, không phải một đầu việc cần check-out. Giờ đã qua hiển thị “Đã kết thúc”.</p>':''}${p.reflection?`<h3 class="detail-heading">Nhìn lại</h3><p class="modal-copy">${esc(p.reflection)}</p>`:''}<div class="stack" style="margin-top:18px">${p.fixed?`<button class="button full" data-action="edit-fixed" data-id="${esc(p.commitmentId)}">Chỉnh lịch cố định</button>`:`<button class="button full" data-action="checkout" data-id="${esc(p.id)}">${p.done?'Xem check-out':'Check-out công việc'}</button>`}<button class="button secondary full" data-action="close">Đóng chi tiết</button></div>`);
+}
+function expandCalendar(){
+  showModal('Bảng lịch của bạn',calendarBoard());modal.classList.add('calendar-expanded');
+}
+function changeCalendar(){
+  const expanded=modal.open && modal.classList.contains('calendar-expanded');render();if(expanded)expandCalendar();
+}
+function refreshScheduleStatuses(){
+  document.querySelectorAll('.session-status').forEach(el=>{const p=calendarEntry(el.dataset.entryId,el.dataset.day,el.dataset.fixed==='true');if(p)el.innerHTML=statusMarkup(p);});
+  document.querySelectorAll('.calendar-event').forEach(el=>{const p=calendarEntry(el.dataset.id,el.dataset.day,el.dataset.fixed==='true');if(p){const status=sessionStatus(p);el.dataset.state=status.key;el.setAttribute('aria-label',`${p.title}, ${dayLabel(p.day)} ${timeText(p.start)}, ${status.label}`);}});
+  document.querySelectorAll('[data-calendar-day]').forEach(el=>el.classList.toggle('is-today',el.dataset.calendarDay===vietnamDay(Date.now())));
 }
 function fixedEditor(id) {
   const existing = state.commitments.find(c=>c.id===id);
@@ -294,8 +336,15 @@ const actions = {
   invite:()=>unavailable('Mời bạn đồng hành','Mời thành viên, chia sẻ thực và đồng bộ nhóm chưa được triển khai. Những tên bạn thêm vào đây chỉ là dữ liệu mẫu trên trình duyệt.'),
   'add-fixed':()=>fixedEditor(), 'edit-fixed':el=>fixedEditor(el.dataset.id),
   'delete-fixed':el=>{state.commitments=state.commitments.filter(c=>c.id!==el.dataset.id);save();render();toast('Đã bỏ lịch cố định.');},
-  'delete-plan':el=>{state.plan=state.plan.filter(p=>p.id!==el.dataset.id);save();render();},
+  'delete-plan':el=>{modal.close();state.plan=state.plan.filter(p=>p.id!==el.dataset.id);save();render();},
   'sample-plan':samplePlan,
+  'schedule-list':()=>{scheduleView='list';render();},
+  'schedule-calendar':()=>{scheduleView='calendar';render();},
+  'calendar-prev':()=>{calendarStart=addDays(calendarStart,-7);changeCalendar();},
+  'calendar-next':()=>{calendarStart=addDays(calendarStart,7);changeCalendar();},
+  'calendar-today':()=>{calendarStart=weekStart(vietnamDay(Date.now()));changeCalendar();},
+  'calendar-expand':expandCalendar,
+  'session-detail':el=>openSession(el.dataset.id,el.dataset.day,el.dataset.fixed==='true'),
   'ai-example':()=>{const field=document.querySelector('#ai-form [name="request"]');if(field)field.value='Tôi kiểm tra DBMS trong 3 ngày nữa, CNPM trong 4 ngày nữa, KTLT trong 5 ngày nữa. Hãy lập lịch ôn và nội dung từng buổi.';},
   'study-preferences':editStudyPreferences,
   'edit-ai':()=>{aiDraft=null;openAI();},
@@ -328,6 +377,7 @@ document.addEventListener('input',event=>{
   }
 });
 document.addEventListener('change',event=>{
+  if(event.target.hasAttribute('data-calendar-span')){calendarSpan=Number(event.target.value);changeCalendar();}
   if(event.target.name==='audience')document.getElementById('audience-note').hidden=event.target.selectedIndex===0;
 });
 document.addEventListener('submit',event=>{
@@ -374,6 +424,8 @@ document.addEventListener('submit',event=>{
 });
 modal.addEventListener('click',event=>{if(event.target!==modal)return;const r=modal.getBoundingClientRect();if(event.clientX<r.left || event.clientX>r.right || event.clientY<r.top || event.clientY>r.bottom)modal.close();});
 setInterval(()=>{
+  const minute=Math.floor(Date.now()/60000);
+  if(minute!==lastScheduleMinute){lastScheduleMinute=minute;refreshScheduleStatuses();}
   if(phoneView==='launcher') {
     if(launcherMinute!==Math.floor(Date.now()/60000))renderLauncher();
     const widgetClock=document.getElementById('widget-countdown');if(widgetClock && state.focus)widgetClock.textContent=focusClock()+' còn lại';

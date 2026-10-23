@@ -1,0 +1,5 @@
+const session=(id,title,day,start,extra={})=>({id,title,day,start,duration:45,kind:'plan',source:'ai',subject:'DBMS',done:false,objectives:['Hiểu nguyên tắc JOIN'],steps:['Đọc ví dụ','Giải ba câu truy vấn'],expectedOutput:'Ba truy vấn đã tự kiểm tra',...extra});
+export const calendarFixture={version:1,ready:true,profile:{name:'An',birthday:''},
+  tasks:[{id:'no-time',title:'Đọc ghi chú chưa đặt giờ',day:'2026-10-24',duration:30,done:false}],
+  plan:[session('over','Phiên đã quá giờ','2026-10-24',480),session('live','Buổi đang học','2026-10-24',585),session('soon','Buổi sắp tới','2026-10-24',630),session('done','Buổi đã hoàn thành','2026-10-24',420,{done:true}),session('monday-a','Ôn truy vấn lồng','2026-10-19',480),session('monday-b','Ôn Scrum','2026-10-19',540,{subject:'CNPM'}),session('next-week','Mục tiêu tuần sau','2026-10-26',780),session('long-goal','Mục tiêu dài hạn','2026-11-09',1080)],
+  commitments:[{id:'school',title:'Đi học ở trường',weekdays:[1],start:420,end:480}],activities:[],sessions:[],focus:null,circle:null};
