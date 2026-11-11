@@ -54,7 +54,7 @@ QA hình ảnh thực tế ở `screenshots/demo-*.png`, không commit. Chưa ki
 
 10. AI bắt buộc có lịch cố định, payload tối thiểu, preview chưa tự lưu, xác nhận và giữ sau reload; test mặc định dùng response mock.
 
-AI thật đã kiểm chứng trên web local với model gpt-5.4-mini. Bản công khai đang bị chặn do Vercel HTTP 402 fair-use team; không coi source đã cập nhật là đã deploy.
+AI thật đã được kiểm chứng trên web local với model gpt-5.4-mini. Bản trải nghiệm trên Sites dùng kế hoạch mẫu.
 
 ## Lịch trình 0.6.1
 
@@ -70,7 +70,7 @@ Trong tab Tập trung có công tắc nhắc và nút Thử âm báo. Mốc 40/8
 
 Mốc đã nhắc lưu vào focus session trong localStorage, tránh phát trùng qua reload. Tab bị trì hoãn chỉ nhận mốc mới nhất, không phát dồn. Tắt nhắc, kết thúc hoặc check-out việc liên kết sẽ ẩn banner và ngừng nhắc. Bản web không xin quyền thông báo hệ thống, không bảo đảm nhắc khi đóng tab/thiết bị ngủ. Chưa triển khai service worker push hoặc alarm nền như Android.
 
-Đã qua ba test Playwright mới và ba test Node mới: ranh giới thời gian, nhiều mốc, lựa chọn lưu lại, kết thúc, âm thanh bị chặn, không tràn 320px. QA thêm Web Audio thật trên Edge headless, đã thấy banner báo âm được phát và không có pageerror. Không gọi AI, không tiêu credit. Vercel vẫn bị chặn; cập nhật này hiện có ở source và localhost.
+Đã qua ba test Playwright mới và ba test Node mới: ranh giới thời gian, nhiều mốc, lựa chọn lưu lại, kết thúc, âm thanh bị chặn, không tràn 320px. QA thêm Web Audio thật trên Edge headless, đã thấy banner báo âm được phát và không có pageerror. Không gọi AI, không tiêu credit.
 
 ## Màu cột ngày 0.6.3
 

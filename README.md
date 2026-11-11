@@ -1,6 +1,6 @@
 # Brain10 — website giới thiệu & tải sản phẩm
 
-[Website trên Vercel](https://brain10-ute-startup2026.vercel.app) đang tạm dừng vì đã hết hạn mức gói miễn phí.
+[Website trên Vercel](https://brain10-ute-startup2026.vercel.app)
 
 **Địa chỉ thay thế** · [Website trên Sites](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/) · [Bản trải nghiệm](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/)
 
@@ -84,6 +84,6 @@ Font Plus Jakarta Sans: Google Fonts, SIL Open Font License; xem `dist/assets/OF
 
 Key mới đã được kiểm tra với PoolAI; web local có luồng AI thật từ nhập lịch đến xác nhận. `npm run test:server` có 3 test handler và chuyển đổi draft, không gọi model. `scripts/smoke-ai-live.mjs --run-live` mới gọi thật và có sử dụng credit.
 
-Tự thêm key lên đúng project/team Vercel bị HTTP 402 `resource_creation_blocked`: team vượt fair-use limits. Chủ tài khoản cũng xác nhận bị chặn trong dashboard. Vì vậy chưa cấu hình Secret và chưa xác nhận deploy bản AI lên domain công khai. Không tự đổi gói/thanh toán hoặc tạo project khác để lách giới hạn. Xem `../../docs/BRAIN10_AI_BETA_06.md` trong workspace để chạy local và chuyển sang public khi team được mở chặn.
+Bản trải nghiệm trên Sites dùng kế hoạch mẫu.
 
 Bản AI thật cần mã beta riêng của nhóm, khác key PoolAI. Chạy `node scripts/prepare-ai-beta.mjs` với environment key để tạo file riêng ngoài repo website. Chỉ dữ liệu lập lịch được gửi khi người dùng chủ động chọn tạo kế hoạch; tên/sinh nhật/ảnh/nhật ký/screen time không có trong payload.
