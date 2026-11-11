@@ -1,89 +1,109 @@
-# Brain10 — website giới thiệu & tải sản phẩm
+<p align="center">
+  <img src="docs/images/brain10.png" width="88" height="88" alt="Biểu tượng Brain10">
+</p>
 
-[Website trên Vercel](https://brain10-ute-startup2026.vercel.app)
+<h1 align="center">Brain10</h1>
 
-**Địa chỉ thay thế** · [Website trên Sites](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/) · [Bản trải nghiệm](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/)
+<p align="center">
+  <strong>Lên lịch học và làm việc, giữ tập trung và theo dõi tiến độ mỗi ngày.</strong><br>
+  Dự án sinh viên tại UTE SV-Startup 2026
+</p>
 
-Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Trang `/try/` bổ sung bản trải nghiệm tương tác dựa trên giao diện APK 0.6.0; đây là bản thử cục bộ trên trình duyệt, không thay thế ứng dụng Android.
+<p align="center">
+  <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/"><strong>Thử Brain10 trên trình duyệt</strong></a>
+</p>
 
-## Chạy local
+<p align="center">
+  <a href="https://brain10-ute-startup2026.vercel.app/">Website trên Vercel</a><br>
+  Địa chỉ thay thế · <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/">Website trên Sites</a>
+</p>
 
-Cần Node.js 22+ và dependencies backend:
+<p align="center">
+  <a href="#trải-nghiệm">Trải nghiệm</a> ·
+  <a href="#chạy-cục-bộ">Chạy cục bộ</a> ·
+  <a href="#cấu-trúc">Cấu trúc</a> ·
+  <a href="#kiểm-thử">Kiểm thử</a>
+</p>
 
-```sh
+<p align="center">
+  <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/">
+    <img src="docs/images/web-demo.png" width="780" alt="Bản trải nghiệm Brain10 trên trình duyệt với công việc mẫu, tiến độ hôm nay và nút check-out">
+  </a>
+</p>
+
+## Trải nghiệm
+
+Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập trung và ghi lại kết quả. Repo này chứa **trang giới thiệu dự án** và **bản trải nghiệm trên trình duyệt**, dựa trên giao diện Android 0.6.3.
+
+1. Mở bản trải nghiệm và chọn **Dùng hồ sơ mẫu An**.
+2. Ở tab **Hôm nay**, thêm một việc hoặc thử **Check-out** một việc có sẵn.
+3. Ở tab **Lịch trình**, thêm lịch cố định, xem bảng 1, 2 hoặc 4 tuần và thử kế hoạch ôn tập mẫu.
+4. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
+
+Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/?view=launcher)
+
+## Chạy cục bộ
+
+Cần **Node.js 22+** và npm.
+
+```bash
+git clone https://github.com/zomboXx/UTE-START-UP-2026.git
+cd UTE-START-UP-2026
 npm ci
 npm start
 ```
 
-Mở `http://127.0.0.1:4174`. Có thể đổi cổng bằng biến môi trường `PORT`. Server chỉ bind localhost.
-
-Nếu file `../mobile/artifacts/brain10-android-debug.apk` tồn tại (bố cục workspace phát triển hiện tại), server local cho tải APK tại `/downloads/brain10-android-debug.apk`. Có thể dùng biến môi trường `BRAIN10_LOCAL_APK` để trỏ tới một bản cài khác đã đối chiếu metadata. APK không được copy vào repo, không đi cùng deployment.
+Mở [trang giới thiệu](http://127.0.0.1:4174/) hoặc [bản trải nghiệm](http://127.0.0.1:4174/try/). Biến môi trường `PORT` cho phép đổi cổng.
 
 ## Cấu trúc
 
-```text
-dist/
-  index.html       Landing page
-  style.css        Responsive layout
-  site.js          Menu, FAQ/dialog, thông tin tải
-  release.json     Metadata phát hành, không chứa file APK
-  try/             Giao diện trải nghiệm web và luồng AI có xác nhận
-  assets/          Logo, font có license, ảnh giao diện app
-api/plans.mjs      Vercel Function, mã thử beta, không chứa key
-server/planner.mjs Slot / JSON Schema / gọi model / kiểm tra draft
-server.mjs         Preview cục bộ và handler AI local
-vercel.json        Cấu hình static deployment
+| Đường dẫn | Nội dung |
+| --- | --- |
+| [`dist/`](dist/) | Trang giới thiệu, tài nguyên và thông tin bản tải |
+| [`dist/try/`](dist/try/) | Giao diện demo, lịch, bộ đếm và widget mô phỏng |
+| [`server.mjs`](server.mjs) | Server xem thử cục bộ |
+| [`api/plans.mjs`](api/plans.mjs) · [`server/planner.mjs`](server/planner.mjs) | API lập lịch beta, tìm khung giờ và kiểm tra kế hoạch trả về |
+| [`tests/`](tests/) · [`test-server/`](test-server/) | Kiểm thử trình duyệt và logic máy chủ |
+
+## Kiểm thử
+
+```bash
+npm run check
+npm test
+npm run test:server
 ```
 
-## Triển khai Vercel
+`npm run check` kiểm tra cú pháp JavaScript. `npm test` chạy Playwright với Microsoft Edge. Có thể đặt `BRAIN10_TEST_URL` để chạy suite trên một bản triển khai cụ thể. `npm run test:server` kiểm tra handler và logic lập lịch với dữ liệu thử.
 
-Import repository `zomboXx/UTE-START-UP-2026` vào tài khoản Vercel có quyền; dùng:
+## Triển khai và bản cài
 
-- Framework: **Other**.
-- Root Directory: thư mục gốc repo.
-- Build Command: để trống.
-- Output Directory: **dist** (đã khai báo trong vercel.json).
-- Landing page không cần biến môi trường. AI thật cần Secret `POOL_API_KEY` ở Production; không đưa key vào client. Handler API đã có trong repo.
+<details>
+<summary>Cấu hình Vercel</summary>
 
-Landing là HTML/CSS/JS tĩnh; AI dùng Vercel Function `/api/plans` (Android tương thích `/v1/plans`). `server.mjs` phục vụ xem và gọi AI khi chạy local. Không thêm file APK vào `dist` hay Git. [Tài liệu Vercel](https://vercel.com/docs/builds/configure-a-build).
+Import repo với **Framework Preset: Other**, **Root Directory:** thư mục gốc, **Build Command:** để trống và **Output Directory:** `dist`. Cấu hình nằm trong [vercel.json](vercel.json).
 
-Đã deploy sau khi người dùng cho phép: project `brain10-ute-startup2026`, repo GitHub nối với Vercel, domain công khai đã kiểm tra từ phiên không đăng nhập. Vercel Authentication được tắt riêng cho project website công khai này.
+Trang giới thiệu và kế hoạch mẫu chạy với HTML, CSS và JavaScript. API beta sử dụng `/api/plans`, có rewrite từ `/v1/plans` cho Android.
 
-## Bản tải
+</details>
 
-`dist/release.json` mặc định có `downloadUrl: null`, nên bản được host hiển thị **Chưa mở tải công khai**. Local server chỉ cung cấp link thử khi tìm thấy APK. Nhãn extension là chưa có bản phát hành.
+<details>
+<summary>Thông tin APK</summary>
 
-Khi sẵn sàng phát hành:
+[Metadata bản cài](dist/release.json) điều khiển thông tin và nút tải. APK hiện chưa mở tải công khai. Server cục bộ tìm bản thử tại `../mobile/artifacts/brain10-android-debug.apk` hoặc đường dẫn do `BRAIN10_LOCAL_APK` chỉ định.
 
-1. Kiểm chứng bản Android, chuẩn bị ghi chú phiên bản và chữ ký phù hợp.
-2. Upload APK dưới dạng GitHub Release asset ở repo app hoặc repo phát hành.
-3. Cập nhật `version`, `channel`, `androidMinimum`, `bytes`, `sha256`, `downloadUrl`, `deviceTested` cho đúng file.
-4. Cập nhật nội dung/nhãn trong index.html cùng phiên bản; hiện bản site đầu dùng nội dung 0.1.1 cố định.
-5. Deploy website. Link tải được cho phép là HTTPS GitHub Releases dưới tài khoản `zomboXx`; khi đổi nơi lưu file, cập nhật kiểm tra URL tại site.js.
+Khi phát hành, đưa APK đã kiểm chứng lên GitHub Releases và cập nhật phiên bản, kích thước, SHA-256, URL tải và trạng thái kiểm thử thiết bị trong metadata. Kiểm tra điều kiện chấp nhận URL tại [dist/site.js](dist/site.js).
 
-GitHub chặn file trên 100 MiB trong Git; bản APK debug hiện khoảng 163 MiB, phù hợp đặt ở Releases thay vì source. [GitHub: large files](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github).
+</details>
 
-## Nội dung & giới hạn
+<details>
+<summary>Chạy AI beta</summary>
 
-- Android là sản phẩm chính; extension là tùy chọn.
-- Ảnh màn Hôm nay lấy trực tiếp từ Android Emulator (Android 13 / API 33). Các hình minh họa khác có nhãn; chưa coi emulator là kiểm chứng trên điện thoại vật lý.
-- Không có số người dùng, lời chứng thực hay lời hứa hiệu quả được dựng lên.
-- Screen time đã kiểm tra trên emulator khi chưa cấp và sau khi cấp Usage Access; chọn ảnh hệ thống đã qua kiểm tra native. Focus chưa khóa ứng dụng; GPT và nhóm thật chưa tích hợp.
-- Không có form thu thập thông tin, analytics, login hoặc cookies do mã website đặt. Font được self-host; hosting có thể có log truy cập.
-- Chưa có tên/ảnh cá nhân và thông tin liên hệ được xác nhận của các thành viên, nên phần đội ngũ giới thiệu vai trò.
+Đặt `POOL_API_KEY` trong môi trường máy chủ. Luồng AI beta yêu cầu mã thử riêng. Script [prepare-ai-beta.mjs](scripts/prepare-ai-beta.mjs) tạo thông tin dùng thử cho nhóm. Lệnh `node scripts/smoke-ai-live.mjs --run-live` gọi model thật và có thể sử dụng credit.
 
-## Kiểm tra
+</details>
 
-`npm run check` kiểm tra cú pháp JavaScript. `npm ci` và `npm test` chạy 10 bài kiểm tra trình duyệt qua Playwright / Microsoft Edge cho trang giới thiệu, bản trải nghiệm và widget mô phỏng. Có thể dùng `BRAIN10_TEST_URL` để chạy cùng bộ kiểm tra với website đã deploy. Các ảnh QA trong `screenshots/` không đưa vào Git. Xem [DEMO.md](DEMO.md) để biết phạm vi và giới hạn bản web.
+## Góp ý
 
-Logo/wordmark mới do nhóm cung cấp được lưu nguyên bản tại `dist/assets/brand-source.png`. SVG viewport hiển thị icon và tên trên header, footer, favicon, giao diện app và màn hình chính mô phỏng. `/try/?view=launcher` mở trực tiếp màn hình chính với hai widget tương tác; đây không phải widget cài lên thiết bị thật.
+Khi báo lỗi, ghi rõ trình duyệt, màn hình gặp lỗi và các bước tái hiện. [GitHub Issues](https://github.com/zomboXx/UTE-START-UP-2026/issues)
 
-Font Plus Jakarta Sans: Google Fonts, SIL Open Font License; xem `dist/assets/OFL-Jakarta.txt`. Repo chưa được gán giấy phép mã nguồn thay mặt chủ sở hữu.
-
-## AI beta 0.6.0 — trạng thái 23/10/2026
-
-Key mới đã được kiểm tra với PoolAI; web local có luồng AI thật từ nhập lịch đến xác nhận. `npm run test:server` có 3 test handler và chuyển đổi draft, không gọi model. `scripts/smoke-ai-live.mjs --run-live` mới gọi thật và có sử dụng credit.
-
-Bản trải nghiệm trên Sites dùng kế hoạch mẫu.
-
-Bản AI thật cần mã beta riêng của nhóm, khác key PoolAI. Chạy `node scripts/prepare-ai-beta.mjs` với environment key để tạo file riêng ngoài repo website. Chỉ dữ liệu lập lịch được gửi khi người dùng chủ động chọn tạo kế hoạch; tên/sinh nhật/ảnh/nhật ký/screen time không có trong payload.
+Font Plus Jakarta Sans được phân phối theo [SIL Open Font License](dist/assets/OFL-Jakarta.txt).
