@@ -1,6 +1,8 @@
 # Brain10 — website giới thiệu & tải sản phẩm
 
-Website công khai: https://brain10-ute-startup2026.vercel.app — đã triển khai Vercel và nối repo GitHub, ngày 19/10/2026.
+[Website trên Vercel](https://brain10-ute-startup2026.vercel.app) đang tạm dừng vì đã hết hạn mức gói miễn phí.
+
+**Địa chỉ thay thế** · [Website trên Sites](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/) · [Bản trải nghiệm](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/)
 
 Mã nguồn **website**, độc lập với app Android. Website giới thiệu dự án, đội ngũ, các bản tải và trạng thái phát triển. Trang `/try/` bổ sung bản trải nghiệm tương tác dựa trên giao diện APK 0.6.0; đây là bản thử cục bộ trên trình duyệt, không thay thế ứng dụng Android.
 
