@@ -1,0 +1,12 @@
+{
+  "version": "0.1.1",
+  "channel": "internal-prototype",
+  "androidMinimum": "Android 7.0+",
+  "bytes": 170923898,
+  "sha256": "4E236D29D8C77977926D79772322354C0DE210AA3BD09608B10B5CBE5545E4AB",
+  "downloadUrl": null,
+  "localPreview": false,
+  "deviceTested": false,
+  "extensionUrl": null,
+  "emulatorTested": true
+}
