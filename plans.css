@@ -1,0 +1,26 @@
+.plans-section{background:#eef3ff;scroll-margin-top:85px}
+.plans-head{max-width:640px;margin:0 auto 24px;text-align:center}
+.plans-head h2{margin:8px 0 10px}
+.plans-head p{color:#53637f}
+.billing-switch{margin:20px auto 24px;padding:4px;display:flex;width:max-content;max-width:100%;border:1px solid #dce6fc;border-radius:40px;background:#e6edfc}
+.billing-switch label{position:relative;cursor:pointer}
+.billing-switch input{position:absolute;opacity:0}
+.billing-switch span{display:block;padding:8px 18px;border-radius:30px;font-size:14px;font-weight:700;color:#455577}
+.billing-switch input:checked+span{background:white;color:#184fc4;box-shadow:0 1px 5px #263c791a}
+.billing-switch input:focus-visible+span{outline:2px solid #2463eb}
+.plan-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.plan-card{display:flex;flex-direction:column;align-items:flex-start;background:white;border:1px solid #dce6fa;border-radius:24px;padding:23px;min-width:0;color:#162139}
+.plan-highlight{border:2px solid #2463eb;box-shadow:0 9px 25px #2463eb15}
+.plan-tag{border-radius:25px;padding:4px 10px;background:#eef2ff;color:#2456b6;font-size:12px;font-weight:750}
+.plan-card h3{font-size:23px;line-height:1.2;margin:12px 0 7px}
+.plan-card .plan-description{color:#526481;margin:0;min-height:3em}
+.plan-card .plan-price{color:#174fc4;font-size:22px;font-weight:800;margin:11px 0}
+.plan-card ul{width:100%;margin:0 0 18px;padding:12px 0 0;border-top:1px solid #e6edfa;list-style:none}
+.plan-card li{display:flex;gap:8px;line-height:1.55;margin:0 0 8px;font-size:14px}
+.plan-card li::before{content:"✓";font-weight:800;color:#2463eb}
+.plan-card .button,.plan-action{margin-top:auto;min-height:44px}
+.plan-action{padding:8px 14px;border:1px solid #b9d0ff;border-radius:30px;background:#eff4ff;color:#174fc4;font:inherit;font-size:14px;font-weight:750;cursor:pointer}
+.plan-action:hover{background:#e0ebff}
+#plan-dialog form{text-align:right}
+@media(max-width:850px){.plan-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:590px){.plan-list{grid-template-columns:1fr}.plan-card .plan-description{min-height:0}}

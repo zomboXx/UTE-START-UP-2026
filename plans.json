@@ -1,0 +1,41 @@
+[
+  {
+    "id": "starter",
+    "name": "Starter",
+    "label": "Đang có",
+    "description": "Sắp xếp việc cần làm và giữ nhịp tập trung mỗi ngày.",
+    "monthly": "Miễn phí",
+    "annual": "Miễn phí",
+    "features": [
+      "Quản lý công việc và lịch cá nhân",
+      "Phiên tập trung và widget Android",
+      "Thống kê thời gian màn hình trên Android"
+    ]
+  },
+  {
+    "id": "focus",
+    "name": "Focus Pro",
+    "label": "Dự kiến · Cá nhân",
+    "description": "Hỗ trợ lập kế hoạch và theo dõi thói quen tập trung sâu hơn.",
+    "monthly": "Đang cập nhật",
+    "annual": "79,99 USD/năm",
+    "features": [
+      "Trợ lý AI và gợi ý điều chỉnh lịch",
+      "Thống kê thói quen tập trung nâng cao",
+      "Theo dõi chuỗi ngày duy trì thói quen"
+    ]
+  },
+  {
+    "id": "mentor",
+    "name": "Mentor & Coach",
+    "label": "Dự kiến · Nhóm",
+    "description": "Dành cho giáo viên, người hướng dẫn và nhóm học tập.",
+    "monthly": "19,99 USD/tháng",
+    "annual": "19,99 USD/tháng",
+    "features": [
+      "Quản lý nhóm học tập",
+      "Giao khung tập trung và theo dõi tiến độ",
+      "Báo cáo tiến độ theo tuần"
+    ]
+  }
+]
