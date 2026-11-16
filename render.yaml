@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: brain10-planner
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: node api-server.mjs
+    healthCheckPath: /api/plans
+    envVars:
+      - key: NODE_VERSION
+        value: 24.11.1
+      - key: HOST
+        value: 0.0.0.0
+      - key: BRAIN10_WEB_ORIGIN
+        value: https://zomboxx.github.io
+      - key: POOL_API_KEY
+        sync: false

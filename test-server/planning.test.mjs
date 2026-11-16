@@ -11,18 +11,27 @@ function modelDraft(context,slots){return validateDraft({status:'draft',summary:
 
 test('public beta rejects missing/invalid credentials and foreign origins without a model call',async t=>{
   let calls=0;
-  const handler=createPlanHandler({key:()=>key,now:()=>now,model:async(c,s)=>{calls++;return modelDraft(c,s);}});
+  const pagesOrigin='https://zomboxx.github.io';
+  const handler=createPlanHandler({key:()=>key,now:()=>now,webOrigin:pagesOrigin,model:async(c,s)=>{calls++;return modelDraft(c,s);}});
   const server=createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
   const url=`http://127.0.0.1:${server.address().port}`,code=betaAccessCode(key);
   const post=(headers={},body=input())=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+  const preflight=(origin)=>fetch(url,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'}});
+  const approved=await preflight(pagesOrigin);
+  assert.equal(approved.status,204);
+  assert.equal(approved.headers.get('access-control-allow-origin'),pagesOrigin);
+  assert.equal(approved.headers.get('access-control-allow-headers'),'Authorization, Content-Type');
+  const rejected=await preflight('https://foreign.example');
+  assert.equal(rejected.headers.get('access-control-allow-origin'),null);
   assert.equal((await post()).status,401);
   assert.equal((await post({Authorization:'Bearer '+'é'.repeat(28)})).status,401);
   assert.equal((await post({Authorization:`Bearer ${code}`,Origin:'https://foreign.example'})).status,403);
   assert.equal((await post({Authorization:`Bearer ${code}`},{...input(),commitments:[]})).status,400);
   assert.equal(calls,0);
-  const response=await post({Authorization:`Bearer ${code}`,Origin:'https://brain10-ute-startup2026.vercel.app'});
+  const response=await post({Authorization:`Bearer ${code}`,Origin:pagesOrigin});
   assert.equal(response.status,200);assert.equal((await response.json()).sessions.length,1);assert.equal(calls,1);
   assert.equal(response.headers.get('cache-control'),'no-store');
+  assert.equal(response.headers.get('access-control-allow-origin'),pagesOrigin);
 });
 test('web contract excludes profile data and rejects stale/duplicate confirmations',()=>{
   const state={profile:{name:'Private name',birthday:'2005-01-01'},commitments:[{title:'Đi học',weekdays:[1,2,3,4,5],start:420,end:720}],plan:[],studyPreferences:input().preferences};

@@ -6,17 +6,25 @@ import {normalizeRequest,buildSlots,callModel} from '../server/planner.mjs';
 export function betaAccessCode(key) {
   return createHmac('sha256',key).update('brain10-private-ai-beta-v1').digest('base64url').slice(0,28);
 }
-export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>process.env.POOL_API_KEY}={}) {
+export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>process.env.POOL_API_KEY,webOrigin=process.env.BRAIN10_WEB_ORIGIN}={}) {
   let busy=false;
   const calls=[];
   return async function handler(req,res) {
     const send=(status,value)=>{res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(value));};
+    const origin=req.headers.origin;
+    if(webOrigin){
+      res.setHeader('Vary','Origin');
+      if(origin===webOrigin)res.setHeader('Access-Control-Allow-Origin',webOrigin);
+    }
+    if(req.method==='OPTIONS' && webOrigin && origin===webOrigin){
+      res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST','Access-Control-Allow-Headers':'Authorization, Content-Type'});
+      return res.end();
+    }
     const configured=!!key();
     if(req.method==='GET')return send(200,{configured,accessRequired:true,model:process.env.POOL_MODEL || 'gpt-5.4-mini'});
     if(req.method!=='POST'){res.setHeader('Allow','GET, POST');return send(405,{error:'Chỉ hỗ trợ tạo kế hoạch bằng POST.'});}
-    if(!configured)return send(503,{error:'AI chưa được cấu hình trên máy chủ. Nhóm cần thêm POOL_API_KEY trên Vercel.'});
-    const origin=req.headers.origin;
-    if(origin && !['https://brain10-ute-startup2026.vercel.app','http://127.0.0.1:4176','http://127.0.0.1:4178','http://127.0.0.1:4174','http://localhost:4176','http://localhost:4178'].includes(origin))return send(403,{error:'Không nhận yêu cầu từ website này.'});
+    if(!configured)return send(503,{error:'AI chưa được cấu hình trên máy chủ Brain10.'});
+    if(origin && ![webOrigin,'https://brain10-ute-startup2026.vercel.app','http://127.0.0.1:4176','http://127.0.0.1:4178','http://127.0.0.1:4174','http://localhost:4176','http://localhost:4178'].includes(origin))return send(403,{error:'Không nhận yêu cầu từ website này.'});
     const supplied=String(req.headers.authorization || '').replace(/^Bearer /,'');
     const expected=betaAccessCode(key());
     if(!/^[A-Za-z0-9_-]{28}$/.test(supplied) || !timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))return send(401,{error:'Nhập mã thử AI của nhóm. Đây không phải key PoolAI.'});

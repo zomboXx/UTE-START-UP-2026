@@ -10,12 +10,11 @@
 </p>
 
 <p align="center">
-  <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/"><strong>Thử Brain10 trên trình duyệt</strong></a>
+  <a href="https://zomboxx.github.io/UTE-START-UP-2026/try/"><strong>Thử Brain10 trên trình duyệt</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://brain10-ute-startup2026.vercel.app/">Website trên Vercel</a><br>
-  Địa chỉ thay thế · <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/">Website trên Sites</a>
+  <a href="https://zomboxx.github.io/UTE-START-UP-2026/">Website trên GitHub Pages</a>
 </p>
 
 <p align="center">
@@ -26,7 +25,7 @@
 </p>
 
 <p align="center">
-  <a href="https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/">
+  <a href="https://zomboxx.github.io/UTE-START-UP-2026/try/">
     <img src="docs/images/web-demo.png" width="780" alt="Bản trải nghiệm Brain10 trên trình duyệt với công việc mẫu, tiến độ hôm nay và nút check-out">
   </a>
 </p>
@@ -40,7 +39,7 @@ Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập t
 3. Ở tab **Lịch trình**, thêm lịch cố định, xem bảng 1, 2 hoặc 4 tuần và thử kế hoạch ôn tập mẫu.
 4. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
 
-Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://brain10-ute-startup2026.sunnyegret35.chatgpt.site/try/?view=launcher)
+Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://zomboxx.github.io/UTE-START-UP-2026/try/?view=launcher)
 
 ## Chạy cục bộ
 
@@ -77,14 +76,16 @@ npm run test:server
 
 ## Triển khai và bản cài
 
-<details>
-<summary>Cấu hình Vercel</summary>
+### Bật AI beta trên GitHub Pages
 
-Import repo với **Framework Preset: Other**, **Root Directory:** thư mục gốc, **Build Command:** để trống và **Output Directory:** `dist`. Cấu hình nằm trong [vercel.json](vercel.json).
+GitHub Pages hiển thị trang web. Render chạy phần tạo lịch và giữ khóa AI. Bản web phục vụ kế hoạch mẫu cho đến khi có địa chỉ máy chủ hoạt động.
 
-Trang giới thiệu và kế hoạch mẫu chạy với HTML, CSS và JavaScript. API beta sử dụng `/api/plans`, có rewrite từ `/v1/plans` cho Android.
+1. Đăng nhập Render bằng GitHub và tạo **Blueprint** từ repo `zomboXx/UTE-START-UP-2026`, nhánh `main`. Cấu hình [render.yaml](render.yaml) chọn máy chủ **Free**. [Mở cấu hình trên Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FzomboXx%2FUTE-START-UP-2026)
+2. Dán API key vào ô `POOL_API_KEY` trên Render. Nếu dùng nhà cung cấp hoặc model khác mặc định trong [planner.mjs](server/planner.mjs), đặt thêm `POOL_API_BASE_URL` và `POOL_MODEL` trong mục **Environment** của máy chủ.
+3. Khi Render báo **Live**, mở địa chỉ máy chủ kèm `/api/plans` và kiểm tra trường `configured` có giá trị `true`. Điền địa chỉ đầy đủ đó vào [`dist/try/planning-endpoint.js`](dist/try/planning-endpoint.js) trên `main` và `try/planning-endpoint.js` trên `gh-pages`.
+4. Mở bản web, thêm lịch cố định và thử tạo kế hoạch bằng mã beta do nhóm cấp. Script [prepare-ai-beta.mjs](scripts/prepare-ai-beta.mjs) tạo mã từ cùng key trên máy phát triển.
 
-</details>
+Gói Free có thể cần khoảng một phút để khởi động sau khi ít người dùng. Dịch vụ chạy web miễn phí, còn mỗi lần gọi AI vẫn dùng số dư của nhà cung cấp API.
 
 <details>
 <summary>Thông tin APK</summary>
