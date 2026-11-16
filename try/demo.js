@@ -1,7 +1,9 @@
 import {defaultPreferences,makePlanningRequest,convertDraft,validateAcceptance} from './planning.js';
 import {reminderBoundary} from './wellbeing.js';
 import {periods,vietnamDay,addDays,weekStart,startTime,sessionStatus,calendarWeeks} from './calendar.js';
+import {githubPagesPlanningUrl} from './planning-endpoint.js';
 // Private beta AI calls use a server-only provider key. No device permissions.
+const planningUrl = location.hostname === 'zomboxx.github.io' ? githubPagesPlanningUrl : '/api/plans';
 const KEY = 'brain10.web-demo.v1';
 const paths = {
   home:'m3 10 9-7 9 7v10h-6v-7H9v7H3Z', calendar:'M4 5h16v16H4ZM4 10h16M8 3v4m8-4v4',
@@ -239,9 +241,13 @@ function editStudyPreferences(){
   showModal('Nhịp học của bạn',`<form id="study-form"><div class="field-grid"><label class="field">Có thể học từ<input type="time" name="start" value="${timeText(p.startMinute)}" required></label><label class="field">Kết thúc trước<input type="time" name="end" value="${timeText(p.endMinute)}" required></label></div><label class="field">Mỗi phiên<select name="session">${[25,30,45,60,90].map(n=>`<option value="${n}" ${p.sessionMinutes===n?'selected':''}>${n} phút</option>`).join('')}</select></label><label class="field">Quỹ học mỗi ngày (phút)<input type="number" name="daily" min="25" max="480" value="${p.dailyMinutes}" required></label><p class="tiny muted">Lịch AI hỗ trợ 7 ngày tới, múi giờ Việt Nam. Lịch đã xác nhận vẫn được giữ nguyên.</p><p id="form-error" class="form-error" role="alert"></p><button class="button full">Lưu nhịp học</button></form>`);
 }
 function openAI(){
-  showModal('Kế hoạch học cùng AI','<p>AI trực tiếp cần máy chủ Brain10. Bạn có thể thử lập lịch mẫu trên trang này.</p>');
+  if(!planningUrl){showModal('Kế hoạch học cùng AI','<p class="modal-copy">AI chưa mở trên bản web. Bạn có thể thử lập lịch mẫu trong mục Lịch trình.</p>');return;}
+  if(!state.commitments.length){showModal('Nhập lịch cố định trước',`<p class="modal-copy">Lưu lịch đi học / đi làm trước khi gọi AI. Bước này giúp tránh trùng giờ và không tốn lượt để hỏi lại thời khóa biểu.</p><button class="button full" data-action="add-fixed">Thêm lịch cố định</button>`);return;}
+  if(aiBusy){toast('AI đang tạo kế hoạch. Hãy chờ kết quả trước khi gửi tiếp.');return;}
+  if(aiDraft){renderAIDraft();return;}
+  const p=state.studyPreferences || defaultPreferences;
+  showModal('Kế hoạch học cùng AI',`<form id="ai-form"><span class="tag">AI THẬT · XEM TRƯỚC RỒI XÁC NHẬN</span><p class="modal-copy" style="margin-top:12px">${state.commitments.length} lịch cố định · khung ${timeText(p.startMinute)}–${timeText(p.endMinute)} · ${p.dailyMinutes} phút/ngày. Múi giờ Việt Nam.</p><label class="field">Mã thử AI của nhóm<input type="password" name="code" value="${esc(betaCode)}" autocomplete="off" maxlength="80" required placeholder="Không nhập key PoolAI"></label><span class="field-hint">Mã riêng do nhóm cung cấp, không phải API key. Chỉ giữ trong bộ nhớ tab này.</span><label class="field">Bạn muốn đạt điều gì?<textarea name="request" maxlength="4000" required placeholder="VD: DBMS kiểm tra sau 3 ngày, cần ôn JOIN…">${esc(state.profile.lastAIRequest || '')}</textarea></label><button type="button" class="text-button" data-action="ai-example">Dùng ví dụ DBMS · CNPM · KTLT</button><label class="field">Đề cương, phần còn yếu, cách học yêu thích<textarea name="learningContext" maxlength="6000" placeholder="Cung cấp phạm vi học để AI không phải đoán…">${esc(state.profile.learningContext || '')}</textarea></label><div class="notice">Khi tạo kế hoạch, mục tiêu, ngữ cảnh học, nhịp học và lịch được gửi qua backend tới PoolAI (${esc('gpt-5.4-mini')}). Không gửi họ tên, sinh nhật, nhật ký, ảnh hay screen time. Yêu cầu này có sử dụng credit AI.</div><p id="ai-error" class="form-error" role="alert"></p><button class="button full" id="ai-submit">${icon('spark')} Tạo kế hoạch để xem trước</button></form>`);
 }
-
 async function generateAI(data){
   if(aiBusy || !state.commitments.length)return;
   betaCode=String(data.get('code')).trim();
@@ -251,7 +257,7 @@ async function generateAI(data){
   aiBusy=true;button.disabled=true;button.textContent='Đang sắp xếp kế hoạch…';
   state.profile.lastAIRequest=request;state.profile.learningContext=learningContext;save();
   try{
-    const response=await fetch('/UTE-START-UP-2026/api/plans',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${betaCode}`},body:JSON.stringify(makePlanningRequest(state,request,learningContext)),signal:AbortSignal.timeout(105000)});
+    const response=await fetch(planningUrl,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${betaCode}`},body:JSON.stringify(makePlanningRequest(state,request,learningContext)),signal:AbortSignal.timeout(105000)});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error || 'Chưa tạo được lịch. Hãy thử lại.');
     aiSessions=convertDraft(result);aiDraft=result;
