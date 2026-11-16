@@ -1,2 +1,1 @@
-// Public server URL, including /api/plans. Leave empty until the server is live.
-export const githubPagesPlanningUrl = '';
+export const githubPagesPlanningUrl = 'https://brain10-planner.onrender.com/api/plans';
