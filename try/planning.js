@@ -33,7 +33,7 @@ export function convertDraft(draft){
   return draft.sessions.map(p=>{
     if(typeof p.title!=='string' || typeof p.subject!=='string' || !Array.isArray(p.objectives) || !Array.isArray(p.steps) || typeof p.expectedOutput!=='string' || !Number.isFinite(Date.parse(p.start)) || !Number.isFinite(Date.parse(p.end)))throw new Error('Phiên học chưa đủ thông tin.');
     const {day,minute}=vnParts(p.start);
-    return {id:crypto.randomUUID(),kind:'plan',source:draft.source==='automatic'?'automatic':'ai',title:p.title,note:p.subject,subject:p.subject,examDate:p.examDate,
+    return {id:crypto.randomUUID(),kind:'plan',source:['automatic','device-ai'].includes(draft.source)?draft.source:'ai',title:p.title,note:p.subject,subject:p.subject,examDate:p.examDate,
       objectives:p.objectives,steps:p.steps,expectedOutput:p.expectedOutput,day,start:minute,duration:(Date.parse(p.end)-Date.parse(p.start))/60000,
       startsAt:p.start,endsAt:p.end,done:false};
   });
