@@ -111,7 +111,7 @@ export async function callModel(context, slots, {fetchImpl = fetch} = {}) {
   const baseUrl = process.env.POOL_API_BASE_URL || 'https://api.poolai.win/v1';
   const url = new URL(baseUrl);
   if (url.protocol !== 'https:' || url.username || url.password) fail('Cấu hình gateway cần HTTPS.');
-  const apiKey = process.env.POOL_API_KEY;
+  const apiKey = process.env.POOL_API_KEY?.trim();
   if (!apiKey) fail('Máy chủ chưa có POOL_API_KEY.');
   const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(90000),

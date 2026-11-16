@@ -12,7 +12,9 @@ function modelDraft(context,slots){return validateDraft({status:'draft',summary:
 test('public beta rejects missing/invalid credentials and foreign origins without a model call',async t=>{
   let calls=0;
   const pagesOrigin='https://zomboxx.github.io';
-  const handler=createPlanHandler({key:()=>key,now:()=>now,webOrigin:pagesOrigin,model:async(c,s)=>{calls++;return modelDraft(c,s);}});
+  const copiedKey=key+'\n';
+  assert.equal(betaAccessCode(copiedKey),betaAccessCode(key));
+  const handler=createPlanHandler({key:()=>copiedKey,now:()=>now,webOrigin:pagesOrigin,model:async(c,s)=>{calls++;return modelDraft(c,s);}});
   const server=createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
   const url=`http://127.0.0.1:${server.address().port}`,code=betaAccessCode(key);
   const post=(headers={},body=input())=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
@@ -45,7 +47,7 @@ test('web contract excludes profile data and rejects stale/duplicate confirmatio
   assert.match(validateAcceptance(sessions,state,now),/Lịch cố định/);
 });
 test('no server secret means fail closed; provider failure never becomes a draft',async t=>{
-  const server=createServer(createPlanHandler({key:()=>''}));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
+  const server=createServer(createPlanHandler({key:()=>' \n'}));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
   const url=`http://127.0.0.1:${server.address().port}`;
   assert.deepEqual(await (await fetch(url)).json(),{configured:false,accessRequired:true,model:'gpt-5.4-mini'});
   assert.equal((await fetch(url,{method:'POST',body:'{}'})).status,503);

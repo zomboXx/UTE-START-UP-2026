@@ -4,7 +4,7 @@ import {normalizeRequest,buildSlots,callModel} from '../server/planner.mjs';
 // Private beta admission credential; never the PoolAI provider key.
 // It rotates automatically with the provider key. Only its owner distributes it.
 export function betaAccessCode(key) {
-  return createHmac('sha256',key).update('brain10-private-ai-beta-v1').digest('base64url').slice(0,28);
+  return createHmac('sha256',key.trim()).update('brain10-private-ai-beta-v1').digest('base64url').slice(0,28);
 }
 export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>process.env.POOL_API_KEY,webOrigin=process.env.BRAIN10_WEB_ORIGIN}={}) {
   let busy=false;
@@ -20,13 +20,14 @@ export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>pr
       res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST','Access-Control-Allow-Headers':'Authorization, Content-Type'});
       return res.end();
     }
-    const configured=!!key();
+    const providerKey=key()?.trim();
+    const configured=!!providerKey;
     if(req.method==='GET')return send(200,{configured,accessRequired:true,model:process.env.POOL_MODEL || 'gpt-5.4-mini'});
     if(req.method!=='POST'){res.setHeader('Allow','GET, POST');return send(405,{error:'Chỉ hỗ trợ tạo kế hoạch bằng POST.'});}
     if(!configured)return send(503,{error:'AI chưa được cấu hình trên máy chủ Brain10.'});
     if(origin && ![webOrigin,'https://brain10-ute-startup2026.vercel.app','http://127.0.0.1:4176','http://127.0.0.1:4178','http://127.0.0.1:4174','http://localhost:4176','http://localhost:4178'].includes(origin))return send(403,{error:'Không nhận yêu cầu từ website này.'});
     const supplied=String(req.headers.authorization || '').replace(/^Bearer /,'');
-    const expected=betaAccessCode(key());
+    const expected=betaAccessCode(providerKey);
     if(!/^[A-Za-z0-9_-]{28}$/.test(supplied) || !timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))return send(401,{error:'Nhập mã thử AI của nhóm. Đây không phải key PoolAI.'});
     let context;
     try {
