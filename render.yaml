@@ -13,5 +13,7 @@ services:
         value: 0.0.0.0
       - key: BRAIN10_WEB_ORIGIN
         value: https://zomboxx.github.io
+      - key: POOL_MODEL
+        value: gpt-5.6-sol
       - key: POOL_API_KEY
         sync: false
