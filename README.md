@@ -36,7 +36,7 @@ Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập t
 
 1. Mở bản trải nghiệm và chọn **Dùng hồ sơ mẫu An**.
 2. Ở tab **Hôm nay**, thêm một việc hoặc thử **Check-out** một việc có sẵn.
-3. Ở tab **Lịch trình**, thêm lịch cố định, xem bảng 1, 2 hoặc 4 tuần và thử kế hoạch ôn tập mẫu. Người có mã beta có thể tạo kế hoạch bằng AI.
+3. Ở tab **Lịch trình**, thêm lịch cố định và chọn **Lên kế hoạch cùng AI**. Dùng mã beta để tạo lịch bằng AI, hoặc chọn **Xếp lịch theo giờ rảnh** để Brain10 tự chọn các buổi ôn trước ngày kiểm tra ngay trên trình duyệt.
 4. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
 
 Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://zomboxx.github.io/UTE-START-UP-2026/try/?view=launcher)
