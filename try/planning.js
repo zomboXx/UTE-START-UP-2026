@@ -1,3 +1,5 @@
+import {buildSlots,dayKey} from './planning-slots.js';
+
 export const defaultPreferences={startMinute:1080,endMinute:1320,sessionMinutes:45,dailyMinutes:120};
 const vnParts=value=>{
   const d=new Date(Date.parse(value)+7*3600000);
@@ -11,13 +13,27 @@ export function makePlanningRequest(state,request,learningContext){
       return {start,end:p.endsAt || new Date(Date.parse(start)+p.duration*60000).toISOString(),kind:'focus'};
     })};
 }
+export function makeAutomaticDraft(state,title,examDate,now=Date.now()){
+  const examTime=Date.parse(`${examDate}T00:00:00+07:00`);
+  if(!Number.isFinite(examTime) || dayKey(examTime)!==examDate || examDate<=dayKey(now))throw new Error('Chọn ngày kiểm tra sau hôm nay.');
+  const request=makePlanningRequest(state,title,'');
+  const existingPlan=request.existingPlan.map(p=>({...p,start:Date.parse(p.start),end:Date.parse(p.end)}));
+  const available=buildSlots({...request,existingPlan,now}).filter(slot=>slot.date<examDate);
+  const sessions=[...new Set(available.map(slot=>slot.date))].slice(0,3).map(date=>{
+    const slot=available.find(slot=>slot.date===date);
+    return {title,subject:'Ôn tập',examDate,start:slot.start,end:slot.end,
+      objectives:['Ôn phần bạn đã chọn.'],steps:['Ôn lại ghi chú.','Làm một bài và ghi lại chỗ còn vướng.'],expectedOutput:'Một bài đã làm và ghi chú tự kiểm tra.'};
+  });
+  if(!sessions.length)throw new Error('Không còn giờ rảnh trước ngày kiểm tra. Hãy kiểm tra lịch cố định và nhịp học.');
+  return {schemaVersion:1,status:'draft',source:'automatic',summary:'Brain10 chọn giờ rảnh trước ngày kiểm tra trong 7 ngày tới.',questions:[],assumptions:[],sessions};
+}
 export function convertDraft(draft){
   if(draft?.schemaVersion!==1 || !['draft','needs_clarification'].includes(draft.status) || !Array.isArray(draft.sessions) ||
       !Array.isArray(draft.questions) || !Array.isArray(draft.assumptions) || draft.sessions.length>40)throw new Error('Kết quả chưa đúng định dạng lịch.');
   return draft.sessions.map(p=>{
     if(typeof p.title!=='string' || typeof p.subject!=='string' || !Array.isArray(p.objectives) || !Array.isArray(p.steps) || typeof p.expectedOutput!=='string' || !Number.isFinite(Date.parse(p.start)) || !Number.isFinite(Date.parse(p.end)))throw new Error('Phiên học chưa đủ thông tin.');
     const {day,minute}=vnParts(p.start);
-    return {id:crypto.randomUUID(),kind:'plan',source:'ai',title:p.title,note:p.subject,subject:p.subject,examDate:p.examDate,
+    return {id:crypto.randomUUID(),kind:'plan',source:draft.source==='automatic'?'automatic':'ai',title:p.title,note:p.subject,subject:p.subject,examDate:p.examDate,
       objectives:p.objectives,steps:p.steps,expectedOutput:p.expectedOutput,day,start:minute,duration:(Date.parse(p.end)-Date.parse(p.start))/60000,
       startsAt:p.start,endsAt:p.end,done:false};
   });
