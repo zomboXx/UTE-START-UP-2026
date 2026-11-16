@@ -52,7 +52,7 @@ test('an AI gateway outage still lets the user schedule and save a free study sl
   await field('Mã thử AI của nhóm').fill('test-beta');
   await field('Bạn muốn đạt điều gì?').fill('Ôn SQL JOIN');
   await button('Tạo kế hoạch để xem trước').click();
-  await expect(page.locator('#ai-error')).toContainText('AI đang tạm gián đoạn');
+  await expect(page.locator('#ai-error')).toContainText('AI qua mạng đang tạm gián đoạn');
   await button('Xếp lịch theo giờ rảnh').click();
   await expect(field('Nội dung cần ôn')).toHaveValue('Ôn SQL JOIN');
   await field('Ngày kiểm tra').fill('2026-11-17');
