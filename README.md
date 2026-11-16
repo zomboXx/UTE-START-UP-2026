@@ -36,7 +36,7 @@ Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập t
 
 1. Mở bản trải nghiệm và chọn **Dùng hồ sơ mẫu An**.
 2. Ở tab **Hôm nay**, thêm một việc hoặc thử **Check-out** một việc có sẵn.
-3. Ở tab **Lịch trình**, thêm lịch cố định, xem bảng 1, 2 hoặc 4 tuần và thử kế hoạch ôn tập mẫu.
+3. Ở tab **Lịch trình**, thêm lịch cố định, xem bảng 1, 2 hoặc 4 tuần và thử kế hoạch ôn tập mẫu. Người có mã beta có thể tạo kế hoạch bằng AI.
 4. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
 
 Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://zomboxx.github.io/UTE-START-UP-2026/try/?view=launcher)
@@ -78,11 +78,11 @@ npm run test:server
 
 ### Bật AI beta trên GitHub Pages
 
-GitHub Pages hiển thị trang web. Render chạy phần tạo lịch và giữ khóa AI. Bản web phục vụ kế hoạch mẫu cho đến khi có địa chỉ máy chủ hoạt động.
+Trang giới thiệu và bản trải nghiệm đều chạy trên GitHub Pages. Khi bạn chọn **Lên kế hoạch cùng AI**, bản web gửi yêu cầu đến máy chủ `brain10-planner` trên Render. Máy chủ giữ khóa AI và trả kế hoạch về để xem trước ngay trên bản web.
 
 1. Đăng nhập Render bằng GitHub và tạo **Blueprint** từ repo `zomboXx/UTE-START-UP-2026`, nhánh `main`. Cấu hình [render.yaml](render.yaml) chọn máy chủ **Free**. [Mở cấu hình trên Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FzomboXx%2FUTE-START-UP-2026)
 2. Dán API key vào ô `POOL_API_KEY` trên Render. Nếu dùng nhà cung cấp hoặc model khác mặc định trong [planner.mjs](server/planner.mjs), đặt thêm `POOL_API_BASE_URL` và `POOL_MODEL` trong mục **Environment** của máy chủ.
-3. Khi Render báo **Live**, mở địa chỉ máy chủ kèm `/api/plans` và kiểm tra trường `configured` có giá trị `true`. Điền địa chỉ đầy đủ đó vào [`dist/try/planning-endpoint.js`](dist/try/planning-endpoint.js) trên `main` và `try/planning-endpoint.js` trên `gh-pages`.
+3. Khi Render báo **Live**, mở địa chỉ máy chủ kèm `/api/plans` và kiểm tra trường `configured` có giá trị `true`. Nếu đổi máy chủ, cập nhật địa chỉ trong [`dist/try/planning-endpoint.js`](dist/try/planning-endpoint.js) trên `main` và `try/planning-endpoint.js` trên `gh-pages`.
 4. Mở bản web, thêm lịch cố định và thử tạo kế hoạch bằng mã beta do nhóm cấp. Script [prepare-ai-beta.mjs](scripts/prepare-ai-beta.mjs) tạo mã từ cùng key trên máy phát triển.
 
 Gói Free có thể cần khoảng một phút để khởi động sau khi ít người dùng. Dịch vụ chạy web miễn phí, còn mỗi lần gọi AI vẫn dùng số dư của nhà cung cấp API.
