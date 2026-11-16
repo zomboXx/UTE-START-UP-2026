@@ -49,6 +49,6 @@ test('web contract excludes profile data and rejects stale/duplicate confirmatio
 test('no server secret means fail closed; provider failure never becomes a draft',async t=>{
   const server=createServer(createPlanHandler({key:()=>' \n'}));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
   const url=`http://127.0.0.1:${server.address().port}`;
-  assert.deepEqual(await (await fetch(url)).json(),{configured:false,accessRequired:true,model:'gpt-5.4-mini'});
+  assert.deepEqual(await (await fetch(url)).json(),{configured:false,accessRequired:true,model:process.env.POOL_MODEL || 'gpt-5.6-sol'});
   assert.equal((await fetch(url,{method:'POST',body:'{}'})).status,503);
 });

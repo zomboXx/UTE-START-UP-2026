@@ -1,5 +1,5 @@
 import {createHmac,timingSafeEqual} from 'node:crypto';
-import {normalizeRequest,buildSlots,callModel} from '../server/planner.mjs';
+import {normalizeRequest,buildSlots,callModel,planningModel} from '../server/planner.mjs';
 
 // Private beta admission credential; never the PoolAI provider key.
 // It rotates automatically with the provider key. Only its owner distributes it.
@@ -22,7 +22,7 @@ export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>pr
     }
     const providerKey=key()?.trim();
     const configured=!!providerKey;
-    if(req.method==='GET')return send(200,{configured,accessRequired:true,model:process.env.POOL_MODEL || 'gpt-5.4-mini'});
+    if(req.method==='GET')return send(200,{configured,accessRequired:true,model:planningModel()});
     if(req.method!=='POST'){res.setHeader('Allow','GET, POST');return send(405,{error:'Chỉ hỗ trợ tạo kế hoạch bằng POST.'});}
     if(!configured)return send(503,{error:'AI chưa được cấu hình trên máy chủ Brain10.'});
     if(origin && ![webOrigin,'https://brain10-ute-startup2026.vercel.app','http://127.0.0.1:4176','http://127.0.0.1:4178','http://127.0.0.1:4174','http://localhost:4176','http://localhost:4178'].includes(origin))return send(403,{error:'Không nhận yêu cầu từ website này.'});

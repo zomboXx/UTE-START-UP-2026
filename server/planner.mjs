@@ -2,6 +2,8 @@ import Ajv from 'ajv';
 import {dayKey} from '../dist/try/planning-slots.js';
 export {buildSlots} from '../dist/try/planning-slots.js';
 
+export const planningModel = () => process.env.POOL_MODEL || 'gpt-5.6-sol';
+
 const text = {type: 'string', minLength: 1, maxLength: 1000};
 const strings = {type: 'array', items: text, maxItems: 12};
 const object = properties => ({type: 'object', properties, required: Object.keys(properties), additionalProperties: false});
@@ -73,7 +75,7 @@ export function validateDraft(value, context, slots) {
     seen.add(s.slotId);
     return {...s, start: slot.start, end: slot.end};
   }).sort((a, b) => a.start.localeCompare(b.start));
-  return {schemaVersion: 1, timezone: context.timezone, model: process.env.POOL_MODEL || 'gpt-5.4-mini',
+  return {schemaVersion: 1, timezone: context.timezone, model: planningModel(),
     ...value, sessions};
 }
 
@@ -86,7 +88,7 @@ export async function callModel(context, slots, {fetchImpl = fetch} = {}) {
   const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(90000),
     headers: {'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json'},
-    body: JSON.stringify({model: process.env.POOL_MODEL || 'gpt-5.4-mini', messages: makeMessages(context, slots),
+    body: JSON.stringify({model: planningModel(), messages: makeMessages(context, slots),
       response_format: {type: 'json_schema', json_schema: {name: 'brain10_study_plan', strict: true, schema: outputSchema}}, max_completion_tokens: 9000}),
   });
   // Never echo gateway response bodies: those can contain credentials or prompts.
