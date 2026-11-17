@@ -33,7 +33,7 @@
     return card;
   }
 
-  function showReviews(reviews) {
+  function showReviews(reviews, illustrative) {
     if (!reviews.length) return;
     const group = element('div', 'feedback-group');
     group.append(...reviews.map(createCard));
@@ -42,7 +42,9 @@
     copy.inert = true;
     track.append(group, copy);
     const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-    rating.textContent = '★ ' + average.toLocaleString('vi-VN', {maximumFractionDigits: 1}) + ' / 5 · ' + reviews.length + ' phản hồi';
+    const description = illustrative ? ' nhận xét minh họa' : ' phản hồi';
+    rating.textContent = '★ ' + average.toLocaleString('vi-VN', {maximumFractionDigits: 1})
+      + ' / 5 · ' + reviews.length + description;
     rating.hidden = false;
     document.getElementById('feedback-preview-label').hidden = !preview;
     empty.hidden = true;
@@ -63,14 +65,6 @@
       window.addEventListener('resize', measure);
     }
 
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(([entry]) => {
-        viewport.toggleAttribute('data-visible', entry.isIntersecting);
-      }).observe(viewport);
-    } else {
-      viewport.dataset.visible = '';
-    }
-
     viewport.addEventListener('focusin', () => { viewport.dataset.manual = ''; });
     viewport.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'touch') viewport.dataset.manual = '';
@@ -81,8 +75,10 @@
     if (!response.ok) throw new Error('Feedback unavailable');
     return response.json();
   }).then((reviews) => {
-    showReviews(reviews.filter((review) => typeof review.displayName === 'string' && typeof review.quote === 'string'
-      && Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5));
+    const valid = reviews.filter((review) => review && typeof review.displayName === 'string' && typeof review.quote === 'string'
+      && Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5);
+    const real = valid.filter((review) => review.illustrative !== true);
+    showReviews(real.length ? real : valid, preview || !real.length);
   }).catch(() => {
     empty.textContent = 'Chưa tải được phản hồi.';
   });
