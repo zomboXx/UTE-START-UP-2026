@@ -16,6 +16,12 @@ http.createServer(async(req,res)=>{
     if(['/api/plans','/v1/plans'].includes(requestUrl.pathname)){await planHandler(req,res);return;}
     if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
     const url=decodeURIComponent(requestUrl.pathname);
+    if (url === '/feedback-preview.json') {
+      const fixture = await readFile(path.join(directory, 'test-server/fixtures/feedback-preview.json'));
+      res.writeHead(200, {'Content-Type': types['.json'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'});
+      res.end(req.method === 'HEAD' ? undefined : fixture);
+      return;
+    }
     if(url==='/release.json'){
       const release=JSON.parse(await readFile(path.join(root,'release.json'),'utf8'));
       if(await downloadable()){
