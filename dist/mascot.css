@@ -1,6 +1,7 @@
 .mascot-toggle, .mascot-panel {
   --mascot-edge: max(16px, env(safe-area-inset-right));
-  --mascot-bottom: max(16px, env(safe-area-inset-bottom));
+  --mascot-bottom: max(12px, env(safe-area-inset-bottom));
+  --mascot-size: clamp(64px, 7vw, 82px);
 }
 
 .mascot-toggle {
@@ -15,28 +16,24 @@
     bottom: var(--mascot-bottom);
     display: grid;
     place-items: center;
-    width: 64px;
-    height: 64px;
+    width: var(--mascot-size);
+    height: var(--mascot-size);
     padding: 0;
-    overflow: hidden;
-    border: 2px solid #d0e1ff;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 6px 22px #183e802d;
-    transition: translate 180ms ease, border-color 180ms ease;
+    border-radius: 10px;
+    background: transparent;
+    transition: translate 180ms ease;
   }
 }
 
 .mascot-toggle img {
-  width: 104px;
+  display: block;
+  width: 100%;
   height: auto;
-  max-width: none;
-  position: absolute;
+  filter: drop-shadow(0 3px 4px #142d5860);
 }
 
 .mascot-toggle:hover {
   translate: 0 -3px;
-  border-color: #9abbf4;
 }
 
 .mascot-panel {
@@ -46,7 +43,7 @@
 .mascot-panel:popover-open {
   display: block;
   position: fixed;
-  inset: auto var(--mascot-edge) calc(var(--mascot-bottom) + 78px) auto;
+  inset: auto var(--mascot-edge) calc(var(--mascot-bottom) + var(--mascot-size) + 8px) auto;
   margin: 0;
   padding: 20px;
   width: min(300px, calc(100vw - 32px));
