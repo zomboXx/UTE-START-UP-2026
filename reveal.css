@@ -1,0 +1,18 @@
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal-state] {
+    transition: opacity 480ms ease, translate 480ms cubic-bezier(.2, .65, .3, 1);
+  }
+
+  [data-reveal-state="above"]:not(:focus-within),
+  [data-reveal-state="below"]:not(:focus-within) {
+    opacity: 0;
+  }
+
+  [data-reveal-state="above"]:not(:focus-within) {
+    translate: 0 -22px;
+  }
+
+  [data-reveal-state="below"]:not(:focus-within) {
+    translate: 0 22px;
+  }
+}
