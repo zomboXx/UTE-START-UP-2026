@@ -17,7 +17,7 @@
     "name": "Focus Pro",
     "label": "Dự kiến · Cá nhân",
     "description": "Hỗ trợ lập kế hoạch và theo dõi thói quen tập trung sâu hơn.",
-    "monthly": "Đang cập nhật",
+    "monthly": null,
     "annual": "79,99 USD/năm",
     "features": [
       "Trợ lý AI và gợi ý điều chỉnh lịch",
@@ -31,7 +31,7 @@
     "label": "Dự kiến · Nhóm",
     "description": "Dành cho giáo viên, người hướng dẫn và nhóm học tập.",
     "monthly": "19,99 USD/tháng",
-    "annual": "Đang cập nhật",
+    "annual": null,
     "features": [
       "Quản lý nhóm học tập",
       "Giao khung tập trung và theo dõi tiến độ",
