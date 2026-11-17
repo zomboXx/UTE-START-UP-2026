@@ -47,6 +47,7 @@
 
 .feedback-carousel[data-active] .feedback-track {
   display: flex;
+  align-items: flex-start;
   translate: calc(var(--feedback-slide, 0) * -100%) 0;
   transition: translate 420ms ease;
 }
@@ -57,14 +58,46 @@
   padding: clamp(22px, 4vw, 42px);
 }
 
+.feedback-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 14px;
+}
+
 .feedback-slide h3 {
-  margin: 0 0 8px;
+  overflow-wrap: anywhere;
   font-size: clamp(18px, 2.4vw, 25px);
   line-height: 1.35;
 }
 
-.feedback-slide p {
+.feedback-stars {
+  flex-shrink: 0;
+  color: #7c4d06;
+  font-weight: 750;
+}
+
+.feedback-sample {
+  margin-block: 3px 14px;
   color: #53637f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.feedback-slide blockquote {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.feedback-position {
+  min-width: 5ch;
+  align-self: center;
+  text-align: center;
+  color: #53637f;
+  font-variant-numeric: tabular-nums;
 }
 
 .feedback-navigation:not([hidden]) {
