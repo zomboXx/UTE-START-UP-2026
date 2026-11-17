@@ -194,22 +194,20 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .feedback-viewport[data-loop]:not([data-manual]) {
-    overflow: hidden;
+  .feedback-viewport[data-loop] {
+    overflow: clip;
+    touch-action: pan-y;
     mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
   }
 
-  .feedback-viewport[data-loop]:not([data-manual]) .feedback-group[aria-hidden="true"] {
+  .feedback-viewport[data-loop] .feedback-group[aria-hidden="true"] {
     display: flex;
   }
 
-  .feedback-viewport[data-loop]:not([data-manual]) .feedback-track {
+  .feedback-viewport[data-loop] .feedback-track {
     animation: feedback-loop var(--feedback-duration) linear infinite;
   }
 
-  .feedback-viewport[data-loop]:not([data-manual]):hover .feedback-track {
-    animation-play-state: paused;
-  }
 }
 
 @keyframes feedback-loop {

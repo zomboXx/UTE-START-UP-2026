@@ -79,10 +79,6 @@
       window.addEventListener('resize', measure);
     }
 
-    viewport.addEventListener('focusin', () => { viewport.dataset.manual = ''; });
-    viewport.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'touch') viewport.dataset.manual = '';
-    });
   }
 
   fetch(dataUrl).then((response) => {
