@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Checkout thử · Brain10</title>
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="checkout.css">
+</head>
+<body class="checkout-page">
+  <header class="checkout-header section-wrap">
+    <a class="brand" href="../" aria-label="Brain10 — trang đầu">
+      <svg class="brand-lockup" viewBox="194 239 1008 292" role="img" aria-label="Brain10"><image href="../assets/brand-source.png" width="1376" height="768"/></svg>
+    </a>
+    <a class="checkout-back" href="../#plans">← Quay lại bảng giá</a>
+  </header>
+  <main class="checkout-main section-wrap">
+    <section class="checkout-card" aria-labelledby="checkout-title">
+      <h1 id="checkout-title">Checkout thử</h1>
+      <p class="checkout-note">Bạn có thể thử bước xác nhận. Bản mô phỏng không thu tiền.</p>
+      <p id="checkout-loading" role="status">Đang tải thông tin gói…</p>
+      <noscript><p>Bật JavaScript để xem thông tin gói và thử xác nhận.</p></noscript>
+      <div id="checkout-order" hidden>
+        <dl class="checkout-summary">
+          <div><dt>Gói đã chọn</dt><dd id="checkout-plan"></dd></div>
+          <div><dt>Mức giá dự kiến</dt><dd id="checkout-price"></dd></div>
+        </dl>
+        <button class="button" type="button" id="checkout-confirm">Xác nhận thử</button>
+        <p class="checkout-result" id="checkout-result" role="status" tabindex="-1" hidden></p>
+      </div>
+    </section>
+  </main>
+  <script src="checkout.js?v=3" defer></script>
+</body>
+</html>

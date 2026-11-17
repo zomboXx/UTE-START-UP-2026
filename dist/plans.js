@@ -52,13 +52,13 @@ function createPlanCard(plan) {
   }
   card.append(features);
 
-  if (plan.id === 'free') {
-    const link = document.createElement('a');
-    link.className = 'button';
-    link.href = '#download';
-    link.textContent = 'Xem bản Android';
-    card.append(link);
-  }
+  const upgrade = document.createElement('a');
+  upgrade.className = 'button';
+  const checkoutUrl = new URL('checkout/', plansScript);
+  checkoutUrl.searchParams.set('plan', plan.id);
+  upgrade.href = checkoutUrl.href;
+  upgrade.textContent = 'Nâng cấp ngay';
+  card.append(upgrade);
 
   return card;
 }
