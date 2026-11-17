@@ -1,41 +1,51 @@
 [
   {
-    "id": "starter",
-    "name": "Starter",
-    "label": "Đang có",
-    "description": "Sắp xếp việc cần làm và giữ nhịp tập trung mỗi ngày.",
-    "monthly": "Miễn phí",
-    "annual": "Miễn phí",
+    "id": "free",
+    "name": "BRAIN10 FREE",
+    "price": "Miễn phí",
+    "description": "Dành cho người dùng mới muốn trải nghiệm ứng dụng.",
     "features": [
-      "Quản lý công việc và lịch cá nhân",
-      "Phiên tập trung và widget Android",
-      "Thống kê thời gian màn hình trên Android"
+      "Theo dõi thời gian sử dụng điện thoại cơ bản",
+      "Thiết lập mục tiêu học tập",
+      "Tối đa 5 lượt lập lịch AI mỗi tháng",
+      "15–20 lượt hỏi đáp với AI",
+      "Cập nhật lịch mỗi ngày",
+      "Theo dõi nhiệm vụ cơ bản"
     ]
   },
   {
-    "id": "focus",
-    "name": "Focus Pro",
-    "label": "Dự kiến · Cá nhân",
-    "description": "Hỗ trợ lập kế hoạch và theo dõi thói quen tập trung sâu hơn.",
-    "monthly": null,
-    "annual": "79,99 USD/năm",
+    "id": "pro",
+    "name": "BRAIN10 PRO",
+    "audience": "Cá nhân",
+    "price": "29.000đ",
+    "priceUnit": "/tháng",
+    "description": "Dành cho sinh viên và người đi làm muốn cải thiện khả năng quản lý thời gian chuyên sâu.",
     "features": [
-      "Trợ lý AI và gợi ý điều chỉnh lịch",
-      "Thống kê thói quen tập trung nâng cao",
-      "Theo dõi chuỗi ngày duy trì thói quen"
+      "Lập kế hoạch và hỏi đáp với AI không giới hạn",
+      "Thống kê chi tiết thời gian sử dụng điện thoại",
+      "Báo cáo tiến độ theo ngày và tuần",
+      "Phân tích thói quen sử dụng điện thoại",
+      "Theo dõi lịch sử kế hoạch và nhiệm vụ",
+      "Thiết lập mục tiêu cá nhân nâng cao"
     ]
   },
   {
-    "id": "mentor",
-    "name": "Mentor & Coach",
-    "label": "Dự kiến · Nhóm",
-    "description": "Dành cho giáo viên, người hướng dẫn và nhóm học tập.",
-    "monthly": "19,99 USD/tháng",
-    "annual": null,
+    "id": "organization",
+    "name": "BRAIN10 PRO ORGANIZATION",
+    "audience": "Tổ chức / Doanh nghiệp",
+    "pricePrefix": "Chỉ từ",
+    "price": "15.000đ",
+    "priceUnit": "/ người dùng / tháng",
+    "description": "Dành cho trường đại học, trung tâm đào tạo, doanh nghiệp và tổ chức.",
+    "featuresTitle": "Tiện ích dành cho tổ chức",
     "features": [
-      "Quản lý nhóm học tập",
-      "Giao khung tập trung và theo dõi tiến độ",
-      "Báo cáo tiến độ theo tuần"
+      "Quản lý nhiều tài khoản người dùng trên cùng hệ thống",
+      "Giao diện quản lý tài khoản thành viên",
+      "Dashboard tổng hợp tình hình sử dụng Brain10 ở cấp cá nhân, nhóm và tổ chức",
+      "Báo cáo mức độ tham gia và hoàn thành mục tiêu",
+      "Tổ chức thử thách quản lý thời gian theo nhóm và tổ chức",
+      "Theo dõi hiệu quả chương trình theo từng giai đoạn",
+      "Tư vấn triển khai và hướng dẫn sử dụng"
     ]
   }
 ]
