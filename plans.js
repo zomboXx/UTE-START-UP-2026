@@ -1,3 +1,5 @@
+import { formatVnd, loadPlanCatalog } from './plan-catalog.js';
+
 const planList = document.getElementById('plan-list');
 
 function createPlanCard(plan) {
@@ -24,7 +26,7 @@ function createPlanCard(plan) {
     price.append(prefix, ' ');
   }
   const amount = document.createElement('strong');
-  amount.textContent = plan.price;
+  amount.textContent = plan.monthlyAmount === 0 ? 'Miễn phí' : formatVnd(plan.monthlyAmount);
   price.append(amount);
   if (plan.priceUnit) {
     const unit = document.createElement('span');
@@ -63,13 +65,8 @@ function createPlanCard(plan) {
   return card;
 }
 
-const plansScript = new URL(document.currentScript.src);
-const planData = new URL('plans.json', plansScript);
-planData.search = plansScript.search;
-fetch(planData).then((response) => {
-  if (!response.ok) throw new Error('Plans unavailable');
-  return response.json();
-}).then((plans) => {
+const plansScript = new URL(import.meta.url);
+loadPlanCatalog(plansScript, 'plans.json').then((plans) => {
   planList.replaceChildren(...plans.map(createPlanCard));
 }).catch(() => {
   planList.textContent = 'Chưa tải được danh sách gói. Vui lòng tải lại trang.';
