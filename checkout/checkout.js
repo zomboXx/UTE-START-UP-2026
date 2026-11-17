@@ -22,6 +22,8 @@ function showCheckout(plan) {
   const email = byId('checkout-email');
   const edit = byId('checkout-edit');
   const review = byId('checkout-review');
+  const payButton = byId('checkout-pay');
+  const payNotice = byId('checkout-pay-notice');
   const payStatus = free ? 'Gói Starter miễn phí.' : 'Thanh toán online chưa mở. Bạn có thể xem lại thông tin đơn đăng ký.';
 
   setText('checkout-plan', plan.name);
@@ -36,6 +38,7 @@ function showCheckout(plan) {
   byId('checkout-price-note').hidden = !companyPlan;
   byId('review-company-row').hidden = !companyPlan;
   byId('checkout-get-app').hidden = !free;
+  payButton.hidden = free;
   company.disabled = !companyPlan;
   company.required = companyPlan;
   seats.disabled = !companyPlan;
@@ -53,6 +56,7 @@ function showCheckout(plan) {
   function setReview(show) {
     review.hidden = !show;
     edit.hidden = show;
+    payNotice.hidden = true;
     (show ? byId('checkout-review-title') : name).focus();
   }
 
@@ -68,8 +72,13 @@ function showCheckout(plan) {
     setText('review-name', name.value);
     setText('review-email', email.value);
     setText('review-company', company.value);
-    setText('review-next', free ? 'Bạn có thể tải app và bắt đầu với gói Starter.' : 'Bạn đã kiểm tra thông tin. Giao dịch sẽ khả dụng khi Brain10 mở thanh toán.');
+    setText('review-next', free ? 'Bạn có thể tải app và bắt đầu với gói Starter.' : 'Kiểm tra lại thông tin liên hệ và tổng tiền trước khi tiếp tục.');
     setReview(true);
+  });
+  payButton.addEventListener('click', () => {
+    payNotice.textContent = 'Thanh toán online chưa mở. Đơn đăng ký chưa được gửi.';
+    payNotice.hidden = false;
+    payNotice.focus();
   });
   byId('checkout-edit-button').addEventListener('click', () => setReview(false));
   updateOrder();
