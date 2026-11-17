@@ -1,4 +1,4 @@
-import {defaultPreferences,makePlanningRequest,makeAutomaticDraft,convertDraft,validateAcceptance} from './planning.js?v=3';
+import {defaultPreferences,makePlanningRequest,makeAutomaticDraft,convertDraft,validateAcceptance} from './planning.js?v=4';
 import {reminderBoundary} from './wellbeing.js';
 import {periods,vietnamDay,addDays,weekStart,startTime,sessionStatus,calendarWeeks} from './calendar.js';
 import {githubPagesPlanningUrl} from './planning-endpoint.js';
