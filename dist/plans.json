@@ -2,7 +2,7 @@
   {
     "id": "free",
     "name": "Starter",
-    "price": "Miễn phí",
+    "monthlyAmount": 0,
     "description": "Dành cho người dùng mới muốn trải nghiệm ứng dụng.",
     "features": [
       "Theo dõi thời gian sử dụng điện thoại cơ bản",
@@ -17,7 +17,7 @@
     "id": "pro",
     "name": "Focus Pro",
     "audience": "Cá nhân",
-    "price": "29.000đ",
+    "monthlyAmount": 29000,
     "priceUnit": "/tháng",
     "description": "Dành cho sinh viên và người đi làm muốn cải thiện khả năng quản lý thời gian chuyên sâu.",
     "features": [
@@ -34,7 +34,7 @@
     "name": "Organization",
     "audience": "Tổ chức / Doanh nghiệp",
     "pricePrefix": "Chỉ từ",
-    "price": "15.000đ",
+    "monthlyAmount": 15000,
     "priceUnit": "/ người dùng / tháng",
     "description": "Dành cho trường đại học, trung tâm đào tạo, doanh nghiệp và tổ chức.",
     "featuresTitle": "Tiện ích dành cho tổ chức",

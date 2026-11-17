@@ -1,38 +1,90 @@
-{
-  const requestedPlan = new URL(location.href).searchParams.get('plan');
-  const loading = document.getElementById('checkout-loading');
-  const order = document.getElementById('checkout-order');
-  const confirmButton = document.getElementById('checkout-confirm');
-  const result = document.getElementById('checkout-result');
-  const script = new URL(document.currentScript.src);
-  const plansUrl = new URL('../plans.json', script);
-  plansUrl.search = script.search;
+import { formatVnd, loadPlanCatalog } from '../plan-catalog.js';
 
-  if (requestedPlan) {
-    fetch(plansUrl).then((response) => {
-      if (!response.ok) throw new Error('Plans unavailable');
-      return response.json();
-    }).then((plans) => {
-      const plan = plans.find((option) => option.id === requestedPlan);
-      if (!plan) {
-        loading.textContent = 'Không tìm thấy gói đã chọn. Hãy quay lại bảng giá để chọn gói.';
-        return;
-      }
-      document.getElementById('checkout-plan').textContent = plan.name;
-      document.getElementById('checkout-price').textContent = [plan.pricePrefix, plan.price, plan.priceUnit]
-        .filter(Boolean).join(' ');
-      confirmButton.addEventListener('click', () => {
-        result.textContent = `Đã hoàn tất xác nhận thử gói ${plan.name}.`;
-        result.hidden = false;
-        confirmButton.hidden = true;
-        result.focus();
-      });
-      loading.hidden = true;
-      order.hidden = false;
-    }).catch(() => {
-      loading.textContent = 'Chưa tải được thông tin gói. Vui lòng tải lại trang.';
-    });
-  } else {
-    loading.textContent = 'Hãy chọn một gói từ bảng giá để thử checkout.';
+const page = new URL(location.href);
+const requestedPlan = page.searchParams.get('plan');
+const status = document.getElementById('checkout-status');
+
+function byId(id) {
+  return document.getElementById(id);
+}
+
+function setText(id, text) {
+  byId(id).textContent = text;
+}
+
+function showCheckout(plan) {
+  const companyPlan = plan.id === 'organization';
+  const free = plan.monthlyAmount === 0;
+  const form = byId('checkout-form');
+  const seats = byId('checkout-seats');
+  const company = byId('checkout-company');
+  const name = byId('checkout-name');
+  const email = byId('checkout-email');
+  const edit = byId('checkout-edit');
+  const review = byId('checkout-review');
+  const payStatus = free ? 'Gói Starter miễn phí.' : 'Thanh toán online chưa mở. Bạn có thể xem lại thông tin đơn đăng ký.';
+
+  setText('checkout-plan', plan.name);
+  setText('checkout-plan-audience', plan.audience ?? 'Gói miễn phí');
+  setText('checkout-price', free ? 'Miễn phí' : [plan.pricePrefix, formatVnd(plan.monthlyAmount), plan.priceUnit].filter(Boolean).join(' '));
+  setText('checkout-cycle-label', free ? 'Loại gói' : 'Chu kỳ');
+  setText('checkout-cycle', free ? 'Miễn phí' : 'Hàng tháng');
+  setText('checkout-payment-status', payStatus);
+
+  byId('checkout-org').hidden = !companyPlan;
+  byId('checkout-quantity-row').hidden = !companyPlan;
+  byId('checkout-price-note').hidden = !companyPlan;
+  byId('review-company-row').hidden = !companyPlan;
+  byId('checkout-get-app').hidden = !free;
+  company.disabled = !companyPlan;
+  company.required = companyPlan;
+  seats.disabled = !companyPlan;
+  seats.required = companyPlan;
+
+  function updateOrder() {
+    const quantity = companyPlan ? seats.valueAsNumber : 1;
+    const amount = quantity * plan.monthlyAmount;
+    const valid = Number.isSafeInteger(quantity) && quantity > 0 && Number.isSafeInteger(amount);
+    seats.setCustomValidity(companyPlan && !valid && seats.validity.valid ? 'Hãy nhập số người dùng hợp lệ.' : '');
+    setText('checkout-quantity', valid ? quantity.toLocaleString('vi-VN') : '—');
+    setText('checkout-total', valid ? (companyPlan ? 'Từ ' : '') + formatVnd(amount) + (free ? '' : ' / tháng') : '—');
   }
+
+  function setReview(show) {
+    review.hidden = !show;
+    edit.hidden = show;
+    (show ? byId('checkout-review-title') : name).focus();
+  }
+
+  seats.addEventListener('input', () => {
+    seats.setCustomValidity('');
+    updateOrder();
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    name.value = name.value.trim();
+    company.value = company.value.trim();
+    if (!form.reportValidity()) return;
+    setText('review-name', name.value);
+    setText('review-email', email.value);
+    setText('review-company', company.value);
+    setText('review-next', free ? 'Bạn có thể tải app và bắt đầu với gói Starter.' : 'Bạn đã kiểm tra thông tin. Giao dịch sẽ khả dụng khi Brain10 mở thanh toán.');
+    setReview(true);
+  });
+  byId('checkout-edit-button').addEventListener('click', () => setReview(false));
+  updateOrder();
+  status.hidden = true;
+  byId('checkout-order').hidden = false;
+}
+
+if (!requestedPlan) {
+  status.textContent = 'Hãy chọn một gói từ bảng giá để tiếp tục.';
+} else {
+  loadPlanCatalog(new URL(import.meta.url), '../plans.json').then((plans) => {
+    const plan = plans.find((option) => option.id === requestedPlan);
+    if (plan) showCheckout(plan);
+    else status.textContent = 'Không tìm thấy gói đã chọn. Hãy quay lại bảng giá để chọn gói.';
+  }).catch(() => {
+    status.textContent = 'Chưa tải được thông tin gói. Vui lòng tải lại trang.';
+  });
 }

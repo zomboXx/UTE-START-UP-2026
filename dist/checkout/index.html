@@ -4,34 +4,87 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Checkout thử · Brain10</title>
+  <title>Đăng ký gói · Brain10</title>
   <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="checkout.css">
+  <link rel="stylesheet" href="checkout.css?v=4">
 </head>
 <body class="checkout-page">
-  <header class="checkout-header section-wrap">
-    <a class="brand" href="../" aria-label="Brain10 — trang đầu">
-      <svg class="brand-lockup" viewBox="194 239 1008 292" role="img" aria-label="Brain10"><image href="../assets/brand-source.png" width="1376" height="768"/></svg>
-    </a>
-    <a class="checkout-back" href="../#plans">← Quay lại bảng giá</a>
+  <header class="checkout-header">
+    <div class="checkout-wrap">
+      <a class="brand" href="../" aria-label="Brain10 — trang đầu">
+        <svg class="brand-lockup" viewBox="194 239 1008 292" role="img" aria-label="Brain10"><image href="../assets/brand-source.png" width="1376" height="768"/></svg>
+      </a>
+      <a class="checkout-back" href="../#plans">← Quay lại bảng giá</a>
+    </div>
   </header>
-  <main class="checkout-main section-wrap">
-    <section class="checkout-card" aria-labelledby="checkout-title">
-      <h1 id="checkout-title">Checkout thử</h1>
-      <p class="checkout-note">Bạn có thể thử bước xác nhận. Bản mô phỏng không thu tiền.</p>
-      <p id="checkout-loading" role="status">Đang tải thông tin gói…</p>
-      <noscript><p>Bật JavaScript để xem thông tin gói và thử xác nhận.</p></noscript>
-      <div id="checkout-order" hidden>
-        <dl class="checkout-summary">
-          <div><dt>Gói đã chọn</dt><dd id="checkout-plan"></dd></div>
-          <div><dt>Mức giá dự kiến</dt><dd id="checkout-price"></dd></div>
-        </dl>
-        <button class="button" type="button" id="checkout-confirm">Xác nhận thử</button>
-        <p class="checkout-result" id="checkout-result" role="status" tabindex="-1" hidden></p>
+
+  <main class="checkout-wrap checkout-main">
+    <h1>Đăng ký gói Brain10</h1>
+    <p class="checkout-lead">Kiểm tra gói đã chọn và điền thông tin liên hệ.</p>
+    <p id="checkout-status" role="status">Đang tải thông tin gói…</p>
+    <noscript><p>Bật JavaScript để xem gói và kiểm tra thông tin đăng ký.</p></noscript>
+
+    <div class="checkout-layout" id="checkout-order" hidden>
+      <div class="checkout-details">
+        <section class="checkout-card" id="checkout-edit" aria-labelledby="checkout-contact-title">
+          <h2 id="checkout-contact-title">Thông tin liên hệ</h2>
+          <form id="checkout-form" autocomplete="off">
+            <div class="checkout-fields">
+              <label for="checkout-name">Họ và tên</label>
+              <input id="checkout-name" required maxlength="120" placeholder="Nguyễn Minh An">
+              <label for="checkout-email">Email</label>
+              <input id="checkout-email" type="email" required maxlength="254" placeholder="ten@example.com">
+              <div class="checkout-org" id="checkout-org" hidden>
+                <label for="checkout-company">Tên tổ chức</label>
+                <input id="checkout-company" disabled maxlength="120" placeholder="Trường hoặc doanh nghiệp">
+                <label for="checkout-seats">Số người dùng</label>
+                <input id="checkout-seats" type="number" min="1" step="1" value="1" disabled>
+              </div>
+            </div>
+            <p class="checkout-note">Thông tin nhập tại đây chỉ dùng để xem lại trên trang này.</p>
+            <button class="button" type="submit">Xem lại đăng ký <span aria-hidden="true">→</span></button>
+          </form>
+        </section>
+        <section class="checkout-card" id="checkout-review" aria-labelledby="checkout-review-title" hidden>
+          <h2 id="checkout-review-title" tabindex="-1">Xem lại đăng ký</h2>
+          <dl class="checkout-breakdown">
+            <div><dt>Họ và tên</dt><dd id="review-name"></dd></div>
+            <div><dt>Email</dt><dd id="review-email"></dd></div>
+            <div id="review-company-row" hidden><dt>Tổ chức</dt><dd id="review-company"></dd></div>
+          </dl>
+          <p class="checkout-note" id="review-next"></p>
+          <div class="checkout-review-actions">
+            <button type="button" class="checkout-secondary" id="checkout-edit-button">Chỉnh sửa thông tin</button>
+            <a class="button" id="checkout-get-app" href="../#download" hidden>Tải Brain10</a>
+          </div>
+        </section>
+        <section class="checkout-card checkout-payment" id="checkout-payment" aria-labelledby="checkout-payment-title">
+          <h2 id="checkout-payment-title">Thanh toán</h2>
+          <p id="checkout-payment-status"></p>
+        </section>
       </div>
-    </section>
+      <aside class="checkout-card checkout-summary" aria-labelledby="checkout-summary-title">
+        <div class="checkout-summary-heading">
+          <h2 id="checkout-summary-title">Tóm tắt đơn đăng ký</h2>
+          <a href="../#plans">Đổi gói</a>
+        </div>
+        <div class="checkout-plan">
+          <img class="checkout-plan-icon" src="../assets/icon.svg" width="44" height="44" alt="">
+          <div><strong id="checkout-plan"></strong><p id="checkout-plan-audience"></p></div>
+        </div>
+        <dl class="checkout-breakdown">
+          <div><dt>Đơn giá</dt><dd id="checkout-price"></dd></div>
+          <div><dt id="checkout-cycle-label">Chu kỳ</dt><dd id="checkout-cycle"></dd></div>
+          <div id="checkout-quantity-row" hidden><dt>Số người dùng</dt><dd id="checkout-quantity"></dd></div>
+        </dl>
+        <div class="checkout-total">
+          <p id="checkout-total-label">Tổng dự kiến</p><output id="checkout-total" aria-labelledby="checkout-total-label"></output>
+        </div>
+        <p class="checkout-note" id="checkout-price-note" hidden>Giá khởi điểm. Mức chính thức phụ thuộc vào cấu hình triển khai.</p>
+      </aside>
+    </div>
   </main>
-  <script src="checkout.js?v=3" defer></script>
+  <script src="checkout.js?v=4" type="module"></script>
 </body>
 </html>
