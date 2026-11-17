@@ -16,6 +16,20 @@
     return node;
   }
 
+  function createStars(value) {
+    const stars = element('span', 'feedback-stars');
+    stars.setAttribute('role', 'img');
+    stars.setAttribute('aria-label', value.toLocaleString('vi-VN') + ' trên 5 sao');
+    for (let position = 0; position < 5; position++) {
+      const star = element('span', 'feedback-star', '★');
+      star.setAttribute('aria-hidden', 'true');
+      const fill = Math.max(0, Math.min(1, value - position)) * 100;
+      star.style.setProperty('--star-fill', fill + '%');
+      stars.append(star);
+    }
+    return stars;
+  }
+
   function createCard(review) {
     const card = element('article', 'feedback-slide');
     const profile = element('header', 'feedback-profile');
@@ -28,7 +42,7 @@
 
     const meta = element('footer', 'feedback-meta');
     const descriptor = [review.age && review.age + ' tuổi', review.occupation].filter(Boolean).join(' · ');
-    meta.append(element('span', null, descriptor), element('span', 'feedback-stars', '★ ' + review.rating + '/5 sao'));
+    meta.append(element('span', null, descriptor), createStars(review.rating));
     card.append(profile, element('blockquote', null, review.quote), meta);
     return card;
   }
@@ -42,11 +56,9 @@
     copy.inert = true;
     track.append(group, copy);
     const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-    const description = illustrative ? ' nhận xét minh họa' : ' phản hồi';
-    rating.textContent = '★ ' + average.toLocaleString('vi-VN', {maximumFractionDigits: 1})
-      + ' / 5 · ' + reviews.length + description;
+    rating.replaceChildren(createStars(average));
     rating.hidden = false;
-    document.getElementById('feedback-preview-label').hidden = !preview;
+    document.getElementById('feedback-preview-label').hidden = !illustrative;
     empty.hidden = true;
     viewport.hidden = false;
 
