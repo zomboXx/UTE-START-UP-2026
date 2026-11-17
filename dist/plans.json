@@ -1,7 +1,7 @@
 [
   {
     "id": "free",
-    "name": "BRAIN10 FREE",
+    "name": "Starter",
     "price": "Miễn phí",
     "description": "Dành cho người dùng mới muốn trải nghiệm ứng dụng.",
     "features": [
@@ -15,7 +15,7 @@
   },
   {
     "id": "pro",
-    "name": "BRAIN10 PRO",
+    "name": "Focus Pro",
     "audience": "Cá nhân",
     "price": "29.000đ",
     "priceUnit": "/tháng",
@@ -31,7 +31,7 @@
   },
   {
     "id": "organization",
-    "name": "BRAIN10 PRO ORGANIZATION",
+    "name": "Organization",
     "audience": "Tổ chức / Doanh nghiệp",
     "pricePrefix": "Chỉ từ",
     "price": "15.000đ",
