@@ -1,12 +1,12 @@
 {
-  "version": "0.6.3",
+  "version": "0.6.5",
   "channel": "public-beta",
   "androidMinimum": "Android 7.0+",
-  "bytes": 186408405,
-  "sha256": "E370C276792D4F37201630616506E65FDB98649395FCCD22E1D55D1094A0E8DA",
-  "downloadUrl": "https://github.com/zomboXx/UTE-START-UP-2026/releases/download/android-v0.6.3-beta/brain10-0.6.3-android-beta.apk",
+  "bytes": 54888972,
+  "sha256": "99D813E209DA7F5E2EAAE5FF02358827171B41F4BE616F65C08AFD1B4FA733B2",
+  "downloadUrl": "https://github.com/zomboXx/UTE-START-UP-2026/releases/download/android-v0.6.5-beta/brain10-0.6.5-android-beta.apk",
   "localPreview": false,
   "deviceTested": false,
   "extensionUrl": null,
-  "emulatorTested": true
+  "emulatorTested": false
 }
