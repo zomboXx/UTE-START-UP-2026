@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('feedback keeps looping after interaction and joins the last card to the first', async ({ page }) => {
+test('feedback keeps looping after interaction and joins the last card to the first', async ({ page, baseURL }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.goto('/');
+  await page.goto(baseURL);
   const viewport = page.getByRole('region', { name: 'Dải phản hồi' });
   const track = viewport.locator('.feedback-track');
   await expect(viewport).toBeVisible();
