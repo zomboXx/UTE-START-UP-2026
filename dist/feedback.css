@@ -1,8 +1,8 @@
 .feedback {
   overflow: hidden;
   padding: clamp(40px, 7vw, 95px) 0;
-  background: radial-gradient(ellipse at 45% 0, #203b69, transparent 58%), #101b30;
-  color: #f6f9ff;
+  background: radial-gradient(ellipse at 45% 0, #e8f1ff, transparent 66%), #f7faff;
+  color: var(--ink);
 }
 
 .feedback-heading {
@@ -15,22 +15,22 @@
 
 .feedback-heading p, #feedback-empty {
   margin-top: 8px;
-  color: #c1cde0;
+  color: #53637f;
 }
 
 .feedback-heading .feedback-rating {
-  color: #ffd780;
+  color: #80530a;
   font-weight: 700;
 }
 
 .feedback-viewport {
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: #52678b #17243a;
+  scrollbar-color: #9db6de #e7eef9;
 }
 
 .feedback-viewport:focus-visible {
-  outline: 2px solid #8ab2ff;
+  outline: 2px solid #346dcc;
   outline-offset: 4px;
 }
 
@@ -41,7 +41,7 @@
 
 .feedback-group {
   gap: 16px;
-  padding-inline-end: 16px;
+  padding: 4px 16px 12px 0;
 }
 
 .feedback-group[aria-hidden="true"] {
@@ -54,9 +54,10 @@
   width: clamp(260px, 36vw, 450px);
   min-height: 270px;
   padding: clamp(18px, 2.7vw, 30px);
-  border: 1px solid #8eacd43d;
+  border: 1px solid #d7e3f4;
   border-radius: 18px;
-  background: linear-gradient(147deg, #334764, #1b2a43 63%, #16233a);
+  background: linear-gradient(147deg, #fff, #f3f7ff);
+  box-shadow: 0 5px 14px #1e42710b;
 }
 
 .feedback-profile {
@@ -65,7 +66,7 @@
   align-items: center;
   gap: 12px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #c6dbff30;
+  border-bottom: 1px solid #dbe5f4;
 }
 
 .feedback-profile h3 {
@@ -75,7 +76,7 @@
 }
 
 .feedback-username {
-  color: #bdcce5;
+  color: #53637f;
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -85,7 +86,7 @@
   width: 44px;
   height: 44px;
   border-radius: 9px;
-  background: #486287;
+  background: #476caa;
 }
 
 .feedback-avatar::before, .feedback-avatar::after {
@@ -113,7 +114,7 @@
 .feedback-slide blockquote {
   flex: 1;
   margin: 18px 0;
-  color: #eef3fc;
+  color: var(--ink);
   font-size: clamp(14px, 1.28vw, 17px);
   line-height: 1.65;
   overflow-wrap: anywhere;
@@ -125,13 +126,13 @@
   justify-content: space-between;
   gap: 6px;
   padding-top: 12px;
-  border-top: 1px solid #c6dbff30;
-  color: #c4d2e7;
+  border-top: 1px solid #dbe5f4;
+  color: #53637f;
   font-size: 12px;
 }
 
 .feedback-stars {
-  color: #ffd780;
+  color: #80530a;
   white-space: nowrap;
 }
 
