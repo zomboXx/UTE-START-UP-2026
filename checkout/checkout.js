@@ -24,7 +24,7 @@ function showCheckout(plan) {
   const review = byId('checkout-review');
   const payButton = byId('checkout-pay');
   const payNotice = byId('checkout-pay-notice');
-  const payStatus = free ? 'Gói Starter miễn phí.' : 'Thanh toán online chưa mở. Bạn có thể xem lại thông tin đơn đăng ký.';
+  const payStatus = free ? 'Gói Starter miễn phí.' : 'Thanh toán online chưa mở.';
 
   setText('checkout-plan', plan.name);
   setText('checkout-plan-audience', plan.audience ?? 'Gói miễn phí');
@@ -32,6 +32,7 @@ function showCheckout(plan) {
   setText('checkout-cycle-label', free ? 'Loại gói' : 'Chu kỳ');
   setText('checkout-cycle', free ? 'Miễn phí' : 'Hàng tháng');
   setText('checkout-payment-status', payStatus);
+  byId('checkout-payment-methods').hidden = free;
 
   byId('checkout-org').hidden = !companyPlan;
   byId('checkout-quantity-row').hidden = !companyPlan;
