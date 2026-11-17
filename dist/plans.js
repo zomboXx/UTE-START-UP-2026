@@ -54,13 +54,18 @@ function createPlanCard(plan) {
   }
   card.append(features);
 
-  const upgrade = document.createElement('a');
-  upgrade.className = 'button';
-  const checkoutUrl = new URL('checkout/', plansScript);
-  checkoutUrl.searchParams.set('plan', plan.id);
-  upgrade.href = checkoutUrl.href;
-  upgrade.textContent = 'Nâng cấp ngay';
-  card.append(upgrade);
+  const action = document.createElement('a');
+  action.className = 'button';
+  if (plan.id === 'free') {
+    action.href = '#download';
+    action.textContent = 'Dùng miễn phí';
+  } else {
+    const checkoutUrl = new URL('checkout/', plansScript);
+    checkoutUrl.searchParams.set('plan', plan.id);
+    action.href = checkoutUrl.href;
+    action.textContent = 'Nâng cấp ngay';
+  }
+  card.append(action);
 
   return card;
 }
