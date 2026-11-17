@@ -7,7 +7,7 @@
   <title>Đăng ký gói · Brain10</title>
   <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="checkout.css?v=5">
+  <link rel="stylesheet" href="checkout.css?v=6">
 </head>
 <body class="checkout-page">
   <header class="checkout-header">
@@ -63,6 +63,12 @@
         </section>
         <section class="checkout-card checkout-payment" id="checkout-payment" aria-labelledby="checkout-payment-title">
           <h2 id="checkout-payment-title">Thanh toán</h2>
+          <ul id="checkout-payment-methods" class="checkout-payment-methods" aria-label="Phương thức thanh toán" hidden>
+            <li><img src="../assets/payment/apple-pay.svg" alt="" width="58" height="36"><span>Apple Pay</span></li>
+            <li><img src="../assets/payment/google-pay.svg" alt="" width="58" height="36"><span>Google Pay</span></li>
+            <li><img src="../assets/payment/momo.png" alt="" width="58" height="36"><span>MoMo</span></li>
+            <li><img src="../assets/payment/visa.svg" alt="" width="58" height="36"><span>Visa</span></li>
+          </ul>
           <p id="checkout-payment-status"></p>
         </section>
       </div>
@@ -87,6 +93,6 @@
       </aside>
     </div>
   </main>
-  <script src="checkout.js?v=5" type="module"></script>
+  <script src="checkout.js?v=6" type="module"></script>
 </body>
 </html>
