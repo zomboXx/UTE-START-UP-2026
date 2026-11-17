@@ -56,7 +56,9 @@
     copy.inert = true;
     track.append(group, copy);
     const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-    rating.replaceChildren(createStars(average));
+    const score = element('span', 'feedback-score', average.toLocaleString('vi-VN'));
+    score.setAttribute('aria-hidden', 'true');
+    rating.replaceChildren(score, createStars(average));
     rating.hidden = false;
     document.getElementById('feedback-preview-label').hidden = !illustrative;
     empty.hidden = true;

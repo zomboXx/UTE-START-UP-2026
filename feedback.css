@@ -29,6 +29,20 @@
   padding-bottom: 3px;
 }
 
+.feedback-rating:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedback-score {
+  color: var(--ink);
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -.045em;
+  font-weight: 750;
+}
+
 .feedback-rating .feedback-stars {
   gap: 5px;
   font-size: 30px;
@@ -162,15 +176,19 @@
 }
 
 .feedback-star {
-  background: linear-gradient(to right, #a96807 var(--star-fill), #c9d4e5 var(--star-fill));
-  background-clip: text;
-  -webkit-background-clip: text;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  background: linear-gradient(to right, #ffb72e var(--star-fill), #dce5f2 var(--star-fill));
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10.65%203.05Q12%20.8%2013.35%203.05L15.5%207.4L20.3%208.1Q22.8%208.45%2021%2010.2L17.55%2013.55L18.35%2018.3Q18.8%2020.8%2016.55%2019.6L12%2017.25L7.45%2019.6Q5.2%2020.8%205.65%2018.3L6.45%2013.55L3%2010.2Q1.2%208.45%203.7%208.1L8.5%207.4Z%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
   color: transparent;
 }
 
 @media (forced-colors: active) {
   .feedback-star {
     background: none;
+    mask: none;
     color: CanvasText;
   }
 }
