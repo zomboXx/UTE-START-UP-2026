@@ -1,44 +1,146 @@
 [
   {
-    "displayName": "vy.ng",
+    "displayName": "Ngọc Vy",
+    "username": "vy.ng",
+    "age": 20,
+    "occupation": "Sinh viên",
     "rating": 5,
     "quote": "app hay á",
-    "illustrative": false
+    "illustrative": true
   },
   {
     "displayName": "Phong",
+    "username": "phong.ng",
+    "age": 24,
+    "occupation": "Nhân viên thiết kế",
     "rating": 5,
     "quote": "cái widget tiện phết",
-    "illustrative": false
+    "illustrative": true
   },
   {
     "displayName": "Chi Nguyễn",
+    "username": "chi.nguyen",
+    "age": 21,
+    "occupation": "Sinh viên",
     "rating": 5,
     "quote": "Dùng được chục ngày rồi. Đợt này nhóm mình làm bài thuyết trình, phần của mình là tìm ví dụ với soạn mấy slide đầu. Lúc chưa dùng thì cứ để hết trong group chat, tối lục lại mới thấy còn thiếu cái ảnh hôm trước hứa gửi. Mấy hôm sau mình ghi từng việc vào app. Chiều đi học về nhìn thấy còn mỗi việc tìm ảnh thì làm nốt được luôn. Giờ lịch học cố định cũng để trong đó, sáng mở lên xem một lượt rồi cất máy.",
-    "illustrative": false
+    "illustrative": true
   },
   {
-    "displayName": "an.le",
+    "displayName": "An Lê",
+    "username": "an.le",
+    "age": 21,
+    "occupation": "Sinh viên",
     "rating": 5,
     "quote": "Ban đầu tải về thử cái đếm giờ. Hai ba hôm đầu còn quên mở, tới gần cuối tuần mới có thói quen ghi sẵn việc tối mai phải làm. Có hôm về nhà muộn với mệt, mở ra thấy mình chỉ để một việc là đọc nốt hai trang bài hôm trước, thế là ngồi đọc luôn. Dùng khoảng mười ngày thì mình thấy thích nhất cái mục Hôm nay. Hồi trước hay ngồi nghĩ tối nay nên học môn gì, giờ mấy việc nhỏ kiểu đó mình ghi trước cho đỡ nghĩ.",
-    "illustrative": false
+    "illustrative": true
   },
   {
     "displayName": "Huy Vũ",
+    "username": "huy.vu",
+    "age": 22,
+    "occupation": "Sinh viên",
     "rating": 4,
     "quote": "Dùng hơn tuần thấy cũng được. Mà hôm trước nhập nhầm “nộp bài thứ 5” thay vì thứ 6, bấm vô việc tìm chỗ sửa không thấy. Cuối cùng thêm lại một dòng, nhìn danh sách còn cả cái nhập sai hơi rối.",
-    "illustrative": false
+    "illustrative": true
   },
   {
-    "displayName": "mai.anh",
+    "displayName": "Mai Anh",
+    "username": "mai.anh",
+    "age": 23,
+    "occupation": "Nhân viên văn phòng",
     "rating": 4,
     "quote": "App ổn. Mình bật tập trung sâu xong mới nhớ cái đề thầy gửi là link, bấm qua Chrome thì bị chặn. Bữa đó tắt phiên luôn để đọc đề. Cho chừa một hai app cần dùng trong phiên thì mình tiện hơn nhiều.",
-    "illustrative": false
+    "illustrative": true
   },
   {
     "displayName": "Duy",
+    "username": "duy.ng",
+    "age": 22,
+    "occupation": "Sinh viên",
     "rating": 4,
     "quote": "Dùng cỡ chục hôm thấy xem việc hôm nay khá tiện. Có cái bài để dở tối thứ Ba, qua sáng thứ Tư mở ra không thấy nữa. Vào lịch lùi về thứ Ba mới thấy vẫn nằm đó. Mong có chỗ gom mấy việc hôm qua chưa xong, mình hay để sót kiểu này.",
-    "illustrative": false
+    "illustrative": true
+  },
+  {
+    "displayName": "Minh Thư",
+    "username": "minhthu_08",
+    "age": 20,
+    "occupation": "Sinh viên",
+    "rating": 5,
+    "quote": "Mình ghi ba việc trước khi đi ngủ: in đề, đọc chương 2 với gửi bài nhóm. Sáng dậy mở app một lượt, làm được cái nào thì tích cái đó. Tới lúc ra khỏi nhà mới thấy chưa in đề, quay vào lấy kịp.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Hải Trần",
+    "username": "hai.tran123",
+    "age": 22,
+    "occupation": "Sinh viên",
+    "rating": 5,
+    "quote": "đặt 25 phút rồi làm đề, chuông reo mới cầm máy. chừng đó là đủ với mình á",
+    "illustrative": true
+  },
+  {
+    "displayName": "Linh",
+    "username": "linh_",
+    "age": 23,
+    "occupation": "Trợ giảng",
+    "rating": 4,
+    "quote": "Mở thống kê mới để ý mình hay coi video sau giờ ăn trưa. Mình muốn xem riêng mấy ngày đi học để so với cuối tuần, chứ nhìn cả tuần thì hơi khó tách.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Gia Bảo",
+    "username": "bao.ng",
+    "age": 24,
+    "occupation": "Kỹ thuật viên",
+    "rating": 5,
+    "quote": "Đang đợi xe buýt mới nhớ mai phải mang máy tính. Ghi từ widget liền, tối mở mục Hôm nay thấy dòng đó nên bỏ máy vào balô luôn.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Hoài Nam",
+    "username": "nam.ng",
+    "age": 23,
+    "occupation": "Trợ giảng",
+    "rating": 4,
+    "quote": "Lịch tuần có ích hôm mình phải chen thêm buổi học nhóm. Trên điện thoại nhỏ, mấy ô có hai ba việc nhìn hơi chật. Mình hay mở rộng bảng rồi kéo qua lại để xem hết.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Như Quỳnh",
+    "username": "quynh2311",
+    "age": 21,
+    "occupation": "Sinh viên",
+    "rating": 5,
+    "quote": "Thích chỗ ghi một câu lúc xong việc. Bữa ôn Toán mình để lại “chưa hiểu câu 6”, tối sau mở ra làm tiếp luôn, khỏi lật vở tìm mình đã dừng ở đâu.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Ngọc Trâm",
+    "username": "tram__",
+    "age": 26,
+    "occupation": "Nhân viên văn phòng",
+    "rating": 4,
+    "quote": "Mất một lúc mới hiểu phải cấp quyền gì để xem thời gian dùng app. Khi xem được thì dễ đọc. Nếu ở ngay màn hình đó có một câu giải thích từng quyền dùng làm gì thì mình đỡ phải quay ra tìm.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Hoàng",
+    "username": "hoang222",
+    "age": 24,
+    "occupation": "Kỹ thuật viên",
+    "rating": 3,
+    "quote": "Mình hơi vướng ở bước thêm widget. Thêm xong quay lại mà chưa biết phải bấm kiểm tra ở đâu, cứ nghĩ chưa thêm được. Vào được màn hình chính rồi thì ghi việc ổn.",
+    "illustrative": true
+  },
+  {
+    "displayName": "Yến",
+    "username": "yen.tran",
+    "age": 27,
+    "occupation": "Nhân viên văn phòng",
+    "rating": 5,
+    "quote": "đi bộ về mới nhớ chưa ghi, lúc đó thêm giờ với ảnh luôn được. tiện vì mình đâu có mở app lúc đi",
+    "illustrative": true
   }
 ]
