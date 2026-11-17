@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/plans.css">
   <link rel="stylesheet" href="reveal.css">
   <link rel="stylesheet" href="reviews.css">
+  <link rel="stylesheet" href="mascot.css">
 </head>
 <body>
 <a class="skip" href="#main">Đến nội dung chính</a>
@@ -107,4 +108,17 @@
 <script src="/plans.js" defer></script>
 <script src="reveal.js" defer></script>
 <script src="reviews.js" defer></script>
+<button class="mascot-toggle" type="button" popovertarget="mascot-panel" aria-label="Mở trợ giúp cùng Bạch tuộc">
+  <img src="assets/mascot-bach-tuoc.png" width="1376" height="768" alt="">
+</button>
+<aside class="mascot-panel" id="mascot-panel" popover aria-labelledby="mascot-title">
+  <button class="mascot-close" type="button" popovertarget="mascot-panel" popovertargetaction="hide" aria-label="Đóng trợ giúp">×</button>
+  <h2 id="mascot-title">Chào bạn, mình là Bạch tuộc!</h2>
+  <p>Bạn muốn cài Brain10 hay cần xem hướng dẫn?</p>
+  <div class="mascot-links">
+    <a href="#download">Tải APK Android <span data-icon="arrow"></span></a>
+    <a href="#faq">Câu hỏi thường gặp <span data-icon="arrow"></span></a>
+  </div>
+</aside>
+<script src="mascot.js" defer></script>
 </body></html>

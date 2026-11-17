@@ -1,0 +1,109 @@
+.mascot-toggle, .mascot-panel {
+  --mascot-edge: max(16px, env(safe-area-inset-right));
+  --mascot-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.mascot-toggle {
+  display: none;
+}
+
+@supports selector(:popover-open) {
+  .mascot-toggle {
+    position: fixed;
+    z-index: 35;
+    right: var(--mascot-edge);
+    bottom: var(--mascot-bottom);
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid #d0e1ff;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 22px #183e802d;
+    transition: translate 180ms ease, border-color 180ms ease;
+  }
+}
+
+.mascot-toggle img {
+  width: 104px;
+  height: auto;
+  max-width: none;
+  position: absolute;
+}
+
+.mascot-toggle:hover {
+  translate: 0 -3px;
+  border-color: #9abbf4;
+}
+
+.mascot-panel {
+  display: none;
+}
+
+.mascot-panel:popover-open {
+  display: block;
+  position: fixed;
+  inset: auto var(--mascot-edge) calc(var(--mascot-bottom) + 78px) auto;
+  margin: 0;
+  padding: 20px;
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100dvh - 112px);
+  border: 1px solid #d0e1ff;
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 12px 42px #183e8030;
+}
+
+.mascot-panel h2 {
+  margin: 0 32px 6px 0;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: -.3px;
+}
+
+.mascot-panel p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.mascot-close {
+  position: absolute;
+  inset: 8px 8px auto auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f2f6ff;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.mascot-links {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.mascot-links a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  min-height: 42px;
+  border-radius: 9px;
+  background: #f2f6ff;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.mascot-links a:hover, .mascot-close:hover {
+  background: #e6efff;
+}
+
+.mascot-links .icon {
+  width: 15px;
+  height: 15px;
+}
