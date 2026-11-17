@@ -7,7 +7,7 @@
   <title>Đăng ký gói · Brain10</title>
   <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="checkout.css?v=4">
+  <link rel="stylesheet" href="checkout.css?v=5">
 </head>
 <body class="checkout-page">
   <header class="checkout-header">
@@ -56,8 +56,10 @@
           <p class="checkout-note" id="review-next"></p>
           <div class="checkout-review-actions">
             <button type="button" class="checkout-secondary" id="checkout-edit-button">Chỉnh sửa thông tin</button>
+            <button class="button" id="checkout-pay" type="button" hidden>Thanh toán</button>
             <a class="button" id="checkout-get-app" href="../#download" hidden>Tải Brain10</a>
           </div>
+          <p id="checkout-pay-notice" class="checkout-pay-notice" role="status" tabindex="-1" hidden></p>
         </section>
         <section class="checkout-card checkout-payment" id="checkout-payment" aria-labelledby="checkout-payment-title">
           <h2 id="checkout-payment-title">Thanh toán</h2>
@@ -85,6 +87,6 @@
       </aside>
     </div>
   </main>
-  <script src="checkout.js?v=4" type="module"></script>
+  <script src="checkout.js?v=5" type="module"></script>
 </body>
 </html>

@@ -213,6 +213,14 @@
   font-weight: 750;
 }
 
+.checkout-pay-notice {
+  margin-top: 14px;
+  padding: 10px 13px;
+  border-radius: 9px;
+  background: #edf4ff;
+  color: #254674;
+}
+
 @media (max-width: 740px) {
   .checkout-wrap {
     width: calc(100% - 36px);
