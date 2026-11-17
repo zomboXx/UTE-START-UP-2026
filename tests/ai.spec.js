@@ -66,3 +66,25 @@ test('an AI gateway outage still lets the user schedule and save a free study sl
   expect(session).toMatchObject({source:'automatic',day:'2026-11-16',title:'Ôn SQL JOIN',start:1200,duration:45});
   expect(calls).toEqual(['POST']);
 });
+
+test('off-topic AI requests explain the scope and return to editing without saving',async({page})=>{
+  await page.route('**/api/plans',route=>route.fulfill({json:{schemaVersion:1,status:'needs_clarification',reason:'out_of_scope',
+    summary:'Brain10 chỉ hỗ trợ lập lịch học và ôn tập.',questions:[],assumptions:[],exams:[],sessions:[]}}));
+  await page.goto('/try/');
+  const button=name=>page.getByRole('button',{name,exact:true});
+  await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();
+  await button('Lịch trình').click();
+  await button('Thêm lịch cố định').click();
+  await page.getByLabel('Tên lịch',{exact:true}).fill('Lớp tối');
+  await button('Lưu lịch cố định').click();
+  await button('Lên kế hoạch cùng AI ↗').click();
+  await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-beta');
+  const goal=page.getByRole('textbox',{name:'Bạn muốn đạt điều gì?',exact:true});
+  await goal.fill('Trận tiếp theo của ĐTQG Việt Nam là khi nào?');
+  await button('Tạo kế hoạch để xem trước').click();
+  await expect(page.getByRole('heading',{name:'Yêu cầu ngoài phạm vi'})).toBeVisible();
+  await expect(button('Xác nhận thêm vào lịch')).toHaveCount(0);
+  await button('Chỉnh mục tiêu học').click();
+  await expect(goal).toHaveValue('Trận tiếp theo của ĐTQG Việt Nam là khi nào?');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')).plan)).toEqual([]);
+});

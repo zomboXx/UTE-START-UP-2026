@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {createPlanHandler,betaAccessCode} from '../api/plans.mjs';
-import {normalizeRequest,buildSlots,validateDraft} from '../server/planner.mjs';
+import {normalizeRequest,buildSlots,makeMessages,validateDraft} from '../server/planner.mjs';
 import {makePlanningRequest,convertDraft,validateAcceptance} from '../dist/try/planning.js';
 
 const now=Date.parse('2026-10-23T08:00:00Z'),key='test-only-provider-placeholder';
@@ -45,6 +45,24 @@ test('web contract excludes profile data and rejects stale/duplicate confirmatio
   state.plan.push(sessions[0]);assert.match(validateAcceptance(sessions,state,now),/trùng/);
   state.plan=[];state.commitments.push({title:'Lịch mới',weekdays:[5],start:1080,end:1200});
   assert.match(validateAcceptance(sessions,state,now),/Lịch cố định/);
+});
+test('out-of-scope and clarification responses cannot echo unrelated questions or create sessions',()=>{
+  const context=normalizeRequest({...input(),request:'Trận tiếp theo của ĐTQG Việt Nam là khi nào?'},now);
+  const slots=buildSlots(context);
+  const {exams,sessions:[{start,end,...session}]}=modelDraft(context,slots);
+  const output={status:'out_of_scope',summary:'Thông tin do model viết',questions:['Bạn muốn hỏi đội tuyển nào?'],assumptions:['Không liên quan đến lịch học'],exams,sessions:[session]};
+  const result=validateDraft(output,context,slots);
+  assert.equal(result.status,'needs_clarification');
+  assert.equal(result.reason,'out_of_scope');
+  assert.match(result.summary,/chỉ hỗ trợ lập lịch học/);
+  assert.deepEqual(result.questions,[]);
+  assert.deepEqual(result.assumptions,[]);
+  assert.deepEqual(convertDraft(result),[]);
+  const clarification=validateDraft({...output,status:'needs_clarification',sessions:[]},context,slots);
+  assert.match(clarification.questions[0],/môn hoặc chủ đề/);
+  assert.doesNotMatch(JSON.stringify(clarification),/đội tuyển/);
+  assert.equal(makeMessages(context,slots)[0].content,makeMessages({...context,now:now+86400000},slots)[0].content);
+  assert.equal(JSON.parse(makeMessages(context,slots)[1].content).todayInVietnam,'2026-10-23');
 });
 test('no server secret means fail closed; provider failure never becomes a draft',async t=>{
   const server=createServer(createPlanHandler({key:()=>' \n'}));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());

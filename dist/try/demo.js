@@ -344,6 +344,12 @@ async function generateAI(data){
   }
 }
 function renderAIDraft(){
+  if(aiDraft.status==='needs_clarification'){
+    const outside=aiDraft.reason==='out_of_scope';
+    const questions=aiDraft.questions.map(question=>`<p class="notice">${esc(question)}</p>`).join('');
+    showModal(outside?'Yêu cầu ngoài phạm vi':'Bổ sung mục tiêu học',`<p class="modal-copy">${esc(aiDraft.summary)}</p>${questions}<button class="button full" data-action="edit-ai">Chỉnh mục tiêu học</button>`);
+    return;
+  }
   const automatic=aiDraft.source==='automatic';
   const device=aiDraft.source==='device-ai';
   const title=device?'Lịch AI trên thiết bị':automatic?'Lịch theo giờ rảnh':'Lịch AI đề xuất';
