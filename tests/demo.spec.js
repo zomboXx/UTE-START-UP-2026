@@ -13,6 +13,43 @@ async function fixed(page,start='07:00',end='12:00'){
   await page.getByRole('button',{name:'Lưu lịch cố định',exact:true}).click();
 }
 
+test('two tabs keep independent tasks even when one tab submits from stale storage',async({context,page})=>{
+  await enter(page);
+  const second=await context.newPage();
+  await second.addInitScript(()=>window.addEventListener('storage',event=>event.stopImmediatePropagation(),true));
+  await second.goto('/try/');
+  for(const [tab,title] of [[page,'Nộp báo cáo A'],[second,'Nộp báo cáo B']]){
+    await tab.getByRole('button',{name:'Thêm',exact:true}).click();
+    await tab.getByLabel('Bạn muốn làm gì?',{exact:true}).fill(title);
+  }
+  await page.getByRole('button',{name:'Thêm vào danh sách',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')).tasks.some(t=>t.title==='Nộp báo cáo A'))).toBe(true);
+  await second.getByRole('button',{name:'Thêm vào danh sách',exact:true}).click();
+  for(const tab of [page,second]){
+    await expect(tab.getByRole('heading',{name:'Nộp báo cáo A'})).toBeVisible();
+    await expect(tab.getByRole('heading',{name:'Nộp báo cáo B'})).toBeVisible();
+  }
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Nộp báo cáo A'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Nộp báo cáo B'})).toBeVisible();
+});
+
+test('after midnight unfinished tasks remain visible and can be moved to today',async({page})=>{
+  await page.clock.install({time:new Date('2026-11-16T23:58:00+07:00')});
+  await enter(page);
+  const task=page.getByRole('heading',{name:'Luyện nói tiếng Anh 15 phút'});
+  await expect(task).toBeVisible();
+  await page.clock.fastForward(3*60*1000);
+  const overdue=page.getByRole('region',{name:'Chưa xong từ trước (2)'});
+  await expect(overdue.getByRole('heading',{name:'Luyện nói tiếng Anh 15 phút'})).toBeVisible();
+  await overdue.locator('.task-row').filter({has:task}).getByRole('button',{name:'Dời sang hôm nay'}).click();
+  await expect(page.getByRole('region',{name:'Chưa xong từ trước (1)'}).getByText('Luyện nói tiếng Anh 15 phút')).toHaveCount(0);
+  await expect(task).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('region',{name:'Chưa xong từ trước (1)'})).toBeVisible();
+  await expect(task).toBeVisible();
+});
+
 test('landing is preserved and links to the isolated demo; responsive layout',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');
@@ -59,6 +96,7 @@ test('fixed schedules gate sample planning, prevent overlaps and persist confirm
   await page.getByRole('button',{name:'Xem kế hoạch học mẫu',exact:true}).click();
   await expect(page.getByRole('dialog')).toContainText('KHÔNG DÙNG AI');
   await page.getByRole('button',{name:'Xác nhận thêm vào lịch',exact:true}).click();
+  await expect(page.getByText('Đã thêm các phiên mẫu vào lịch.',{exact:true})).toBeVisible();
   const state=await page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')));
   expect(state.plan).toHaveLength(6);
   for(const p of state.plan){

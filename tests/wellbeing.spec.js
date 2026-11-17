@@ -14,6 +14,7 @@ async function enter(page){
   await page.locator('#focus-duration').fill('120');
   await page.getByRole('button',{name:'Bắt đầu phiên',exact:true}).click();
   await page.getByRole('button',{name:'Thử bộ đếm 120 phút',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Kết thúc phiên',exact:true})).toBeVisible();
 }
 test('40/80 minute banners and one chime per interval persist across tab changes and reload',async({page})=>{
   await enter(page);
@@ -38,6 +39,7 @@ test('40/80 minute banners and one chime per interval persist across tab changes
 test('disabling reminders persists and ending early clears an already shown banner',async({page})=>{
   await enter(page);
   await page.getByLabel('Nhắc nghỉ nhẹ và uống nước',{exact:true}).uncheck();
+  await expect(page.getByLabel('Nhắc nghỉ nhẹ và uống nước',{exact:true})).toBeEnabled();
   await page.reload();await page.getByRole('button',{name:'Tập trung',exact:true}).click();
   await expect(page.getByLabel('Nhắc nghỉ nhẹ và uống nước',{exact:true})).not.toBeChecked();
   await page.clock.fastForward(41*60000);

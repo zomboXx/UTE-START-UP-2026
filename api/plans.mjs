@@ -22,13 +22,13 @@ export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>pr
     }
     const providerKey=key()?.trim();
     const configured=!!providerKey;
-    if(req.method==='GET')return send(200,{configured,accessRequired:true,model:planningModel()});
+    if(req.method==='GET')return send(200,{configured,accessRequired:true,model:planningModel(),planningVersion:2});
     if(req.method!=='POST'){res.setHeader('Allow','GET, POST');return send(405,{error:'Chỉ hỗ trợ tạo kế hoạch bằng POST.'});}
     if(!configured)return send(503,{error:'AI chưa được cấu hình trên máy chủ Brain10.'});
     if(origin && ![webOrigin,'https://brain10-ute-startup2026.vercel.app','http://127.0.0.1:4176','http://127.0.0.1:4178','http://127.0.0.1:4174','http://localhost:4176','http://localhost:4178'].includes(origin))return send(403,{error:'Không nhận yêu cầu từ website này.'});
     const supplied=String(req.headers.authorization || '').replace(/^Bearer /,'');
     const expected=betaAccessCode(providerKey);
-    if(!/^[A-Za-z0-9_-]{28}$/.test(supplied) || !timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))return send(401,{error:'Nhập mã thử AI của nhóm. Đây không phải key PoolAI.'});
+    if(!/^[A-Za-z0-9_-]{28}$/.test(supplied) || !timingSafeEqual(Buffer.from(supplied),Buffer.from(expected)))return send(401,{error:'Mã dùng thử chưa đúng hoặc đã thay đổi. Kiểm tra lại mã do nhóm Brain10 cung cấp.'});
     let context;
     try {
       let body=req.body;
@@ -36,9 +36,8 @@ export function createPlanHandler({model=callModel,now=()=>Date.now(),key=()=>pr
       if(typeof body==='string'){if(Buffer.byteLength(body)>100000)throw new Error('Yêu cầu quá lớn.');body=JSON.parse(body);}
       else if(Buffer.byteLength(JSON.stringify(body))>100000)throw new Error('Yêu cầu quá lớn.');
       context=normalizeRequest(body,now());
-      if(!context.commitments.length)throw new Error('Nhập lịch cố định trước khi tạo kế hoạch AI.');
     } catch(e){return send(400,{error:e instanceof SyntaxError?'JSON không hợp lệ.':e.message});}
-    const slots=buildSlots(context);
+    const slots=buildSlots(context).filter(slot=>!context.targetDate || slot.date<context.targetDate);
     if(!slots.length)return send(422,{error:'Không còn giờ rảnh phù hợp. Hãy kiểm tra lịch cố định và nhịp học.'});
     const time=now();while(calls.length && calls[0]<time-60000)calls.shift();
     // Best-effort per warm instance, not a global billing quota. Admission code

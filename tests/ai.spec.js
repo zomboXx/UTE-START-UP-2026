@@ -1,6 +1,23 @@
 import {test,expect} from '@playwright/test';
 
-test('AI flow requires fixed schedules, sends only planning context, previews before persisting',async({page})=>{
+test('AI errors move into view on a small phone and preserve the entered goal',async({page})=>{
+  await page.setViewportSize({width:320,height:640});
+  await page.route('**/api/plans',route=>route.fulfill({status:401,json:{error:'Mã dùng thử đã thay đổi. Kiểm tra mã do nhóm Brain10 cung cấp.'}}));
+  await page.goto('/try/');
+  await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();
+  await page.getByRole('button',{name:'Lịch trình',exact:true}).click();
+  await page.getByRole('button',{name:'Lên kế hoạch cùng AI ↗',exact:true}).click();
+  await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-expired');
+  const goal=page.getByLabel('Bạn muốn đạt điều gì?',{exact:true});
+  await goal.fill('Học nhảy cho buổi văn nghệ ngày 20/11');
+  await page.getByRole('button',{name:'Tạo kế hoạch để xem trước',exact:true}).click();
+  await expect(page.locator('#ai-error')).toContainText('Mã dùng thử đã thay đổi');
+  await expect(page.locator('#ai-error')).toBeInViewport();
+  await expect(goal).toHaveValue('Học nhảy cho buổi văn nghệ ngày 20/11');
+  await expect(page.locator('#ai-submit')).toBeEnabled();
+});
+
+test('AI flow allows no fixed schedule, sends only planning context, previews before persisting',async({page})=>{
   let payload;
   await page.route('**/api/plans',async route=>{
     payload=route.request().postDataJSON();
@@ -11,15 +28,16 @@ test('AI flow requires fixed schedules, sends only planning context, previews be
   await page.goto('/try/');await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();
   await page.getByRole('button',{name:'Lịch trình',exact:true}).click();
   await page.getByRole('button',{name:'Lên kế hoạch cùng AI ↗',exact:true}).click();
-  await expect(page.getByRole('dialog')).toContainText('Lưu lịch đi học');
+  await expect(page.getByRole('dialog')).toContainText('Bạn muốn đạt điều gì?');
   expect(payload).toBeUndefined();
-  await page.getByRole('dialog').getByRole('button',{name:'Thêm lịch cố định',exact:true}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'Đóng',exact:true}).click();
+  await page.getByRole('button',{name:'Thêm lịch cố định',exact:true}).click();
   await page.getByLabel('Tên lịch',{exact:true}).fill('Đi học');
   await page.getByRole('button',{name:'Lưu lịch cố định',exact:true}).click();
   await page.getByRole('button',{name:'Lên kế hoạch cùng AI ↗',exact:true}).click();
   await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-code-not-a-provider-key');
   await page.getByLabel('Bạn muốn đạt điều gì?',{exact:true}).fill('DBMS sau 3 ngày');
-  await page.getByLabel('Đề cương, phần còn yếu, cách học yêu thích',{exact:true}).fill('INNER JOIN, LEFT JOIN');
+  await page.getByLabel('Bạn đã biết gì, muốn tập thêm gì? (tùy chọn)',{exact:true}).fill('INNER JOIN, LEFT JOIN');
   await page.getByRole('button',{name:'Tạo kế hoạch để xem trước',exact:true}).click();
   await expect(page.getByRole('dialog')).toContainText('Luyện INNER JOIN');
   expect(payload.learningContext).toBe('INNER JOIN, LEFT JOIN');expect(payload.profile).toBeUndefined();expect(payload.birthday).toBeUndefined();

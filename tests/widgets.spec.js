@@ -35,13 +35,13 @@ test('widget focus shares a live timer and checkout ends the linked session exac
   await page.getByRole('button',{name:'Thử bộ đếm 30 phút',exact:true}).click();
   await page.getByRole('button',{name:'Màn hình chính Widgets',exact:true}).click();
   await expect(page.locator('.widget-entry')).toContainText('ĐANG TẬP TRUNG');
-  await expect(page.locator('.widget-entry')).toContainText('Đọc chương 4 · DBMS');
+  await expect(page.locator('.widget-entry')).toContainText('Đọc 10 trang sách');
   await page.clock.install();await page.clock.fastForward(65000);
   await expect(page.locator('#widget-countdown')).toContainText('28:');
   await page.getByRole('button',{name:'Check-out công việc trên widget',exact:true}).click();
   await page.getByRole('button',{name:'Bỏ qua phần nhìn lại',exact:true}).click();
   await expect(page.locator('#launcher')).toContainText('1 / 2 việc đã hoàn thành');
-  await expect(page.locator('.widget-entry')).toContainText('Ôn kiểm thử phần mềm');
+  await expect(page.locator('.widget-entry')).toContainText('Luyện nói tiếng Anh 15 phút');
   const state=await page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')));
   expect(state.focus).toBeNull();expect(state.sessions).toHaveLength(1);
   expect(state.sessions[0].seconds).toBeGreaterThanOrEqual(65);
@@ -50,6 +50,7 @@ test('widget focus shares a live timer and checkout ends the linked session exac
 });
 
 test('completed widgets suggest tomorrow; voice is disclosed; widgets fit small and desktop widths',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-11-17T12:00:00+07:00'));
   await enter(page);
   for(let i=0;i<2;i++){
     await page.getByRole('button',{name:'Check-out công việc trên widget',exact:true}).click();

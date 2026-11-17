@@ -5,8 +5,8 @@ const vnParts=value=>{
   const d=new Date(Date.parse(value)+7*3600000);
   return {day:d.toISOString().slice(0,10),minute:d.getUTCHours()*60+d.getUTCMinutes()};
 };
-export function makePlanningRequest(state,request,learningContext){
-  return {request,learningContext,timezone:'Asia/Ho_Chi_Minh',preferences:state.studyPreferences || defaultPreferences,
+export function makePlanningRequest(state,request,learningContext,targetDate=null){
+  return {request,learningContext,targetDate:targetDate || null,timezone:'Asia/Ho_Chi_Minh',preferences:state.studyPreferences || defaultPreferences,
     commitments:state.commitments.map(c=>({title:c.title,weekdays:c.weekdays,startMinute:c.start,endMinute:c.end})),
     existingPlan:state.plan.map(p=>{
       const start=p.startsAt || `${p.day}T${String(Math.floor(p.start/60)).padStart(2,'0')}:${String(p.start%60).padStart(2,'0')}:00+07:00`;
