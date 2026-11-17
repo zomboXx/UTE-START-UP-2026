@@ -17,7 +17,7 @@
     "id": "pro",
     "name": "Focus Pro",
     "audience": "Cá nhân",
-    "monthlyAmount": 29000,
+    "monthlyAmount": 39000,
     "priceUnit": "/tháng",
     "description": "Dành cho sinh viên và người đi làm muốn cải thiện khả năng quản lý thời gian chuyên sâu.",
     "features": [
@@ -34,7 +34,7 @@
     "name": "Organization",
     "audience": "Tổ chức / Doanh nghiệp",
     "pricePrefix": "Chỉ từ",
-    "monthlyAmount": 15000,
+    "monthlyAmount": 29000,
     "priceUnit": "/ người dùng / tháng",
     "description": "Dành cho trường đại học, trung tâm đào tạo, doanh nghiệp và tổ chức.",
     "featuresTitle": "Tiện ích dành cho tổ chức",
