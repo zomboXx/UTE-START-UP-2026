@@ -17,7 +17,16 @@ http.createServer(async(req,res)=>{
     const url=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(url==='/release.json'){
       const release=JSON.parse(await readFile(path.join(root,'release.json'),'utf8'));
-      if(await downloadable()){release.localPreview=true;release.downloadUrl='/downloads/brain10-android-debug.apk';release.bytes=(await stat(apk)).size;}
+      if(await downloadable()){
+        release.localPreview=true;release.downloadUrl='/downloads/brain10-android-debug.apk';release.bytes=(await stat(apk)).size;
+        // The local Android build can be newer than the public release metadata.
+        // Do not label a local download with the previous APK's version/hash.
+        delete release.version;delete release.sha256;
+        try {
+          const build=JSON.parse((await readFile(path.join(path.dirname(apk),'build.json'),'utf8')).replace(/^\uFEFF/,''));
+          if(build.bytes===release.bytes){release.version=build.version;release.sha256=build.sha256;}
+        } catch { /* A custom APK may not have adjacent build metadata. */ }
+      }
       res.writeHead(200,{'Content-Type':types['.json'],'Cache-Control':'no-store'});res.end(req.method==='HEAD'?undefined:JSON.stringify(release));return;
     }
     if(url==='/downloads/brain10-android-debug.apk'&&await downloadable()){

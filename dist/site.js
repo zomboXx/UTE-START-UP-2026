@@ -11,17 +11,60 @@ document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('cli
 let timer;
 function notice(text){const el=document.getElementById('notice');el.textContent=text;el.classList.add('visible');clearTimeout(timer);timer=setTimeout(()=>el.classList.remove('visible'),3500);}
 document.getElementById('copy-hash').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(document.getElementById('hash-value').textContent);notice('Đã sao chép mã SHA-256.');}catch{notice('Bạn có thể chọn và sao chép mã hiển thị bên dưới.');}});
-const download=document.getElementById('android-download');
-download.addEventListener('click',event=>{if(download.getAttribute('aria-disabled')==='true')event.preventDefault();});
-fetch('/release.json').then(response=>{if(!response.ok)throw new Error('Release unavailable');return response.json();}).then(release=>{
-  document.getElementById('apk-size').textContent=`${Math.round(release.bytes/1048576)} MiB`;
-  if(/^[a-f0-9]{64}$/i.test(release.sha256))document.getElementById('hash-value').textContent=release.sha256;
-  if(!release.downloadUrl)return;
-  const url=new URL(release.downloadUrl,location.origin);
-  const local=release.localPreview===true&&url.origin===location.origin&&url.pathname.startsWith('/downloads/');
-  const github=url.protocol==='https:'&&url.hostname==='github.com'&&url.pathname.startsWith('/zomboXx/')&&url.pathname.includes('/releases/download/');
-  if(!local&&!github)return;
-  download.href=url.href;download.classList.remove('disabled');download.removeAttribute('aria-disabled');
-  download.innerHTML='Tải APK thử nghiệm <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="'+paths.download+'"/></svg>';
-  document.getElementById('release-note').textContent=local?'Bản xem local: tải APK nội bộ từ máy này. Chưa kiểm chứng trên điện thoại thật.':'Bản thử nội bộ, chưa phải bản ổn định. Đọc thông tin bản cài trước khi sử dụng.';
-}).catch(()=>{document.getElementById('release-note').textContent='Chưa tải được thông tin bản phát hành. Vui lòng quay lại sau.';});
+const download = document.getElementById('android-download');
+const downloadLabel = document.getElementById('apk-action');
+const releaseNote = document.getElementById('release-note');
+
+function setRelease(release) {
+  const version = typeof release.version === 'string' ? release.version : '';
+  if (version) {
+    document.getElementById('apk-version').textContent = `BẢN THỬ NGHIỆM · ${version}`;
+    document.getElementById('release-title').textContent = `Brain10 cho Android · ${version}`;
+  }
+  if (release.androidMinimum) {
+    document.getElementById('apk-minimum').textContent = release.androidMinimum;
+  }
+  if (Number.isFinite(release.bytes) && release.bytes > 0) {
+    const size = document.getElementById('apk-size');
+    size.textContent = `${Math.round(release.bytes / 1048576)} MiB`;
+    size.hidden = false;
+  }
+  if (/^[a-f0-9]{64}$/i.test(release.sha256)) {
+    document.getElementById('hash-value').textContent = release.sha256;
+    document.getElementById('apk-checksum').hidden = false;
+  }
+
+  downloadLabel.textContent = 'Chưa mở tải công khai';
+  if (!release.downloadUrl) return;
+
+  const url = new URL(release.downloadUrl, location.origin);
+  const local = release.localPreview === true && url.origin === location.origin
+    && url.pathname === '/downloads/brain10-android-debug.apk';
+  const github = url.origin === 'https://github.com'
+    && /^\/zomboXx\/UTE-START-UP-2026\/releases\/download\/[^/]+\/[^/]+\.apk$/i.test(url.pathname);
+  if (!local && !github) return;
+
+  download.href = url.href;
+  download.classList.remove('disabled');
+  download.removeAttribute('aria-disabled');
+  downloadLabel.textContent = 'Tải APK Android';
+
+  if (local) {
+    releaseNote.textContent = 'Bản xem local. File APK được phục vụ từ máy đang chạy website.';
+  } else if (release.deviceTested) {
+    releaseNote.textContent = 'Bản thử nghiệm đã được kiểm tra trên điện thoại Android.';
+  } else if (release.emulatorTested) {
+    releaseNote.textContent = 'Đã kiểm tra cài và mở trên Android Emulator.';
+  }
+}
+
+fetch(new URL('release.json', document.currentScript.src))
+  .then((response) => {
+    if (!response.ok) throw new Error('Release unavailable');
+    return response.json();
+  })
+  .then(setRelease)
+  .catch(() => {
+    downloadLabel.textContent = 'Tạm thời chưa tải được';
+    releaseNote.textContent = 'Chưa tải được thông tin bản phát hành. Vui lòng quay lại sau.';
+  });

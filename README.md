@@ -90,7 +90,7 @@ Gói Free có thể cần khoảng một phút để khởi động sau khi ít 
 <details>
 <summary>Thông tin APK</summary>
 
-[Metadata bản cài](dist/release.json) điều khiển thông tin và nút tải. APK hiện chưa mở tải công khai. Server cục bộ tìm bản thử tại `../mobile/artifacts/brain10-android-debug.apk` hoặc đường dẫn do `BRAIN10_LOCAL_APK` chỉ định.
+[Metadata bản cài](dist/release.json) điều khiển thông tin và nút tải. APK thử nghiệm Android 0.6.3 được phục vụ qua [GitHub Releases](https://github.com/zomboXx/UTE-START-UP-2026/releases/tag/android-v0.6.3-beta). Server cục bộ tìm bản thử tại `../mobile/artifacts/brain10-android-debug.apk` hoặc đường dẫn do `BRAIN10_LOCAL_APK` chỉ định.
 
 Khi phát hành, đưa APK đã kiểm chứng lên GitHub Releases và cập nhật phiên bản, kích thước, SHA-256, URL tải và trạng thái kiểm thử thiết bị trong metadata. Kiểm tra điều kiện chấp nhận URL tại [dist/site.js](dist/site.js).
 
