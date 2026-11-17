@@ -2,31 +2,40 @@ const planList = document.getElementById('plan-list');
 
 function createPlanCard(plan) {
   const card = document.createElement('article');
-  card.className = plan.id === 'focus' ? 'plan-card plan-highlight' : 'plan-card';
+  card.className = plan.id === 'pro' ? 'plan-card plan-highlight' : 'plan-card';
 
-  const label = document.createElement('span');
-  label.className = 'plan-tag';
-  label.textContent = plan.label;
-
+  const heading = document.createElement('header');
   const name = document.createElement('h3');
   name.textContent = plan.name;
+  heading.append(name);
+  if (plan.audience) {
+    const audience = document.createElement('p');
+    audience.className = 'plan-audience';
+    audience.textContent = plan.audience;
+    heading.append(audience);
+  }
+
+  const price = document.createElement('p');
+  price.className = 'plan-price';
+  if (plan.pricePrefix) {
+    const prefix = document.createElement('span');
+    prefix.className = 'plan-price-prefix';
+    prefix.textContent = plan.pricePrefix;
+    price.append(prefix, ' ');
+  }
+  const amount = document.createElement('strong');
+  amount.textContent = plan.price;
+  price.append(amount);
+  if (plan.priceUnit) {
+    const unit = document.createElement('span');
+    unit.className = 'plan-price-unit';
+    unit.textContent = plan.priceUnit;
+    price.append(' ', unit);
+  }
 
   const description = document.createElement('p');
   description.className = 'plan-description';
   description.textContent = plan.description;
-
-  const prices = document.createElement('dl');
-  prices.className = 'plan-prices';
-  for (const [period, heading] of [['monthly', 'Theo tháng'], ['annual', 'Theo năm']]) {
-    const item = document.createElement('div');
-    const term = document.createElement('dt');
-    term.textContent = heading;
-    const price = document.createElement('dd');
-    price.textContent = plan[period] ?? 'Chưa công bố';
-    price.classList.toggle('plan-price-pending', plan[period] == null);
-    item.append(term, price);
-    prices.append(item);
-  }
 
   const features = document.createElement('ul');
   for (const value of plan.features) {
@@ -35,9 +44,15 @@ function createPlanCard(plan) {
     features.append(item);
   }
 
-  card.append(label, name, description, prices, features);
+  card.append(heading, price, description);
+  if (plan.featuresTitle) {
+    const title = document.createElement('h4');
+    title.textContent = plan.featuresTitle;
+    card.append(title);
+  }
+  card.append(features);
 
-  if (plan.id === 'starter') {
+  if (plan.id === 'free') {
     const link = document.createElement('a');
     link.className = 'button';
     link.href = '#download';
@@ -48,7 +63,10 @@ function createPlanCard(plan) {
   return card;
 }
 
-fetch(new URL('plans.json', document.currentScript.src)).then((response) => {
+const plansScript = new URL(document.currentScript.src);
+const planData = new URL('plans.json', plansScript);
+planData.search = plansScript.search;
+fetch(planData).then((response) => {
   if (!response.ok) throw new Error('Plans unavailable');
   return response.json();
 }).then((plans) => {
