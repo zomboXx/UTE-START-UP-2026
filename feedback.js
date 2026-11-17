@@ -19,7 +19,7 @@
   function createStars(value) {
     const stars = element('span', 'feedback-stars');
     stars.setAttribute('role', 'img');
-    stars.setAttribute('aria-label', value.toLocaleString('vi-VN', {maximumFractionDigits: 1}) + ' trên 5 sao');
+    stars.setAttribute('aria-label', value.toLocaleString('vi-VN') + ' trên 5 sao');
     for (let position = 0; position < 5; position++) {
       const star = element('span', 'feedback-star', '★');
       star.setAttribute('aria-hidden', 'true');
@@ -42,8 +42,7 @@
 
     const meta = element('footer', 'feedback-meta');
     const descriptor = [review.age && review.age + ' tuổi', review.occupation].filter(Boolean).join(' · ');
-    if (descriptor) meta.append(element('span', null, descriptor));
-    meta.append(createStars(review.rating));
+    meta.append(element('span', null, descriptor), createStars(review.rating));
     card.append(profile, element('blockquote', null, review.quote), meta);
     return card;
   }
@@ -57,7 +56,7 @@
     copy.inert = true;
     track.append(group, copy);
     const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-    const score = element('span', 'feedback-score', average.toLocaleString('vi-VN', {maximumFractionDigits: 1}));
+    const score = element('span', 'feedback-score', average.toLocaleString('vi-VN'));
     score.setAttribute('aria-hidden', 'true');
     rating.replaceChildren(score, createStars(average));
     rating.hidden = false;
