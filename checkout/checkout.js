@@ -24,14 +24,13 @@ function showCheckout(plan) {
   const review = byId('checkout-review');
   const payButton = byId('checkout-pay');
   const payNotice = byId('checkout-pay-notice');
-  const payStatus = free ? 'Gói Starter miễn phí.' : 'Thanh toán online chưa mở.';
 
   setText('checkout-plan', plan.name);
   setText('checkout-plan-audience', plan.audience ?? 'Gói miễn phí');
   setText('checkout-price', free ? 'Miễn phí' : [plan.pricePrefix, formatVnd(plan.monthlyAmount), plan.priceUnit].filter(Boolean).join(' '));
   setText('checkout-cycle-label', free ? 'Loại gói' : 'Chu kỳ');
   setText('checkout-cycle', free ? 'Miễn phí' : 'Hàng tháng');
-  setText('checkout-payment-status', payStatus);
+  byId('checkout-payment-status').hidden = !free;
   byId('checkout-payment-methods').hidden = free;
 
   byId('checkout-org').hidden = !companyPlan;
@@ -77,7 +76,7 @@ function showCheckout(plan) {
     setReview(true);
   });
   payButton.addEventListener('click', () => {
-    payNotice.textContent = 'Thanh toán online chưa mở. Đơn đăng ký chưa được gửi.';
+    payNotice.textContent = 'Đơn đăng ký chưa được gửi.';
     payNotice.hidden = false;
     payNotice.focus();
   });
