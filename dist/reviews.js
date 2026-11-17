@@ -1,6 +1,5 @@
 {
   const reviewWall = document.getElementById('review-wall');
-  const pauseButton = document.querySelector('.review-pause');
   const motion = window.matchMedia('(prefers-reduced-motion: no-preference)');
   const mobile = window.matchMedia('(max-width: 620px)');
   const copies = [...reviewWall.querySelectorAll('.review-stack')].map((stack) => {
@@ -12,22 +11,19 @@
     return copy;
   });
   let visible = !('IntersectionObserver' in window);
-  let paused = false;
 
   function syncMotion() {
     const moving = motion.matches;
     reviewWall.toggleAttribute('data-motion', moving);
-    reviewWall.toggleAttribute('data-playing', moving && visible && !paused);
+    reviewWall.toggleAttribute('data-playing', moving && visible);
     for (const copy of copies) copy.hidden = !moving;
-    pauseButton.hidden = !moving;
-    pauseButton.textContent = paused ? 'Phát thẻ' : 'Tạm dừng thẻ';
   }
 
   function syncKeyboardAccess() {
     if (mobile.matches) {
       reviewWall.tabIndex = 0;
       reviewWall.setAttribute('role', 'region');
-      reviewWall.setAttribute('aria-label', 'Các cột phản hồi');
+      reviewWall.setAttribute('aria-label', 'Các cột tính năng');
     } else {
       reviewWall.removeAttribute('tabindex');
       reviewWall.removeAttribute('role');
@@ -35,10 +31,6 @@
     }
   }
 
-  pauseButton.addEventListener('click', () => {
-    paused = !paused;
-    syncMotion();
-  });
   motion.addEventListener('change', syncMotion);
   mobile.addEventListener('change', syncKeyboardAccess);
 

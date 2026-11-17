@@ -20,55 +20,10 @@
   line-height: 1.12;
 }
 
-.reviews-stars {
-  position: relative;
-  width: max-content;
-  margin-top: 22px;
-  color: #a7c7ed;
-  font-size: 26px;
-  letter-spacing: .12em;
-  line-height: 1;
-}
-
-.reviews-stars::after {
-  content: "★★★★★";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 90%;
-  overflow: hidden;
-  color: #ffd270;
-}
-
-.reviews-score {
-  margin-block: 6px 10px;
-  font-size: 20px;
-}
-
-.reviews-score strong {
-  font-size: 42px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
 .reviews-preview {
+  margin-top: 16px;
   max-width: 250px;
   color: #e4efff;
-}
-
-.review-pause {
-  min-height: 42px;
-  margin-top: 18px;
-  padding: 7px 15px;
-  border: 1px solid #afd1fa;
-  border-radius: 10px;
-  background: transparent;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.review-pause:hover {
-  background: #ffffff21;
 }
 
 .reviews-wall {
