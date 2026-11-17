@@ -8,7 +8,7 @@
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"><link rel="preload" href="/assets/jakarta.ttf" as="font" type="font/ttf" crossorigin><link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/plans.css?v=2">
   <link rel="stylesheet" href="reveal.css">
-  <link rel="stylesheet" href="reviews.css">
+  <link rel="stylesheet" href="reviews.css?v=2">
   <link rel="stylesheet" href="mascot.css">
 </head>
 <body>
@@ -68,36 +68,69 @@
   <button class="release-details" data-dialog="release-dialog">Thông tin bản cài &amp; cách cài đặt <span data-icon="arrow"></span></button>
 </article><article class="download-card extension-card"><div class="download-card-top"><span class="platform-icon" data-icon="extension"></span><span class="release-label muted-label">TRONG KẾ HOẠCH</span></div><h3>Đồng hành trên máy tính</h3><p>Extension trình duyệt là hướng mở rộng tùy chọn để giữ cam kết khi học và làm việc trên máy tính.</p><div class="extension-illustration" aria-hidden="true"><div class="browser-dots"><i></i><i></i><i></i><span>brain10 / focus</span></div><div class="browser-content"><span data-icon="leaf"></span><span>Một khoảng dành cho việc quan trọng.</span></div></div><div class="coming-soon"><span data-icon="clock"></span> Chưa có bản phát hành</div></article></div><p class="download-bottom"><span data-icon="info"></span> Một số tính năng tập trung và thống kê cần quyền tùy chọn trên Android. Lập lịch AI đang thử nghiệm.</p></div></section>
 
-<section id="reviews" class="reviews section-space" aria-labelledby="reviews-title">
+<section id="reviews" class="reviews" aria-labelledby="reviews-title">
   <div class="section-wrap reviews-layout">
     <header class="reviews-heading">
       <h2 id="reviews-title">Đánh giá Brain10</h2>
       <p class="reviews-stars" aria-hidden="true"><span>★★★★★</span></p>
-      <p class="reviews-score"><strong>4,5</strong><span>/ 5</span></p>
-      <p class="reviews-preview">Số sao minh họa · Đang chờ đánh giá thực tế</p>
+      <p class="reviews-score"><strong>4,5</strong> / 5</p>
+      <p class="reviews-preview">Điểm số và nội dung minh họa. Đánh giá từ người dùng sẽ được cập nhật tại đây.</p>
+      <button class="review-pause" type="button" aria-controls="review-wall" hidden>Tạm dừng thẻ</button>
     </header>
-    <div class="review-carousel" aria-label="Khung phản hồi minh họa">
-      <div class="review-slides" aria-live="off">
-        <article class="review-card">
-          <p class="review-label">Phản hồi minh họa</p>
-          <h3>Tập trung vào một việc</h3>
-          <p>Phản hồi về bộ đếm tập trung sẽ được cập nhật tại đây.</p>
-        </article>
-        <article class="review-card" hidden>
-          <p class="review-label">Phản hồi minh họa</p>
-          <h3>Lên lịch học dễ hơn</h3>
-          <p>Phản hồi về lịch học và danh sách việc cần làm sẽ được cập nhật tại đây.</p>
-        </article>
-        <article class="review-card" hidden>
-          <p class="review-label">Phản hồi minh họa</p>
-          <h3>Hiểu thói quen dùng điện thoại</h3>
-          <p>Phản hồi về thống kê thời gian sử dụng sẽ được cập nhật tại đây.</p>
-        </article>
+    <div id="review-wall" class="reviews-wall">
+      <div class="review-column">
+        <div class="review-track">
+          <div class="review-stack">
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="focus"></span>Phiên tập trung</h3>
+              <p>Phản hồi về bộ đếm và trải nghiệm tập trung khi học.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="chart"></span>Thống kê thời gian</h3>
+              <p>Phản hồi về cách xem lại thời gian dùng điện thoại.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="check"></span>Quản lý nhiệm vụ</h3>
+              <p>Phản hồi về cách thực hiện và đánh dấu việc đã làm.</p>
+            </article>
+          </div>
+        </div>
       </div>
-      <div class="review-controls" hidden>
-        <button type="button" data-review-step="-1" aria-label="Phản hồi trước">←</button>
-        <button type="button" data-review-play>Dừng</button>
-        <button type="button" data-review-step="1" aria-label="Phản hồi tiếp theo">→</button>
+      <div class="review-column">
+        <div class="review-track">
+          <div class="review-stack">
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="clock"></span>Lịch học mỗi ngày</h3>
+              <p>Phản hồi về cách sắp xếp lịch học quanh các khung giờ cố định.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="spark"></span>Lập kế hoạch cùng AI</h3>
+              <p>Phản hồi về gợi ý chia mục tiêu thành các buổi học.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="sun"></span>Tiến độ hằng tuần</h3>
+              <p>Phản hồi về việc nhìn lại tiến độ và điều chỉnh mục tiêu.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+      <div class="review-column">
+        <div class="review-track">
+          <div class="review-stack">
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="phone"></span>Widget Android</h3>
+              <p>Phản hồi về thao tác thêm việc từ màn hình chính.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="leaf"></span>Nhật ký hoạt động</h3>
+              <p>Phản hồi về việc ghi lại các hoạt động ngoài màn hình.</p>
+            </article>
+            <article class="review-card">
+              <h3><span class="review-icon" data-icon="users"></span>Học cùng nhau</h3>
+              <p>Phản hồi về trải nghiệm giữ cam kết với bạn đồng hành.</p>
+            </article>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -129,7 +162,7 @@
 <script src="/site.js" defer></script>
 <script src="/plans.js?v=2" defer></script>
 <script src="reveal.js" defer></script>
-<script src="reviews.js" defer></script>
+<script src="reviews.js?v=2" defer></script>
 <button class="mascot-toggle" type="button" popovertarget="mascot-panel" aria-label="Mở trợ giúp cùng Bạch tuộc">
   <img src="assets/mascot-bach-tuoc.png" width="1376" height="768" alt="">
 </button>
