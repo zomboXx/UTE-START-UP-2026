@@ -148,14 +148,9 @@
 
   .feedback-viewport[data-loop]:not([data-manual]) .feedback-track {
     animation: feedback-loop var(--feedback-duration) linear infinite;
-    animation-play-state: paused;
   }
 
-  .feedback-viewport[data-loop][data-visible]:not([data-manual]) .feedback-track {
-    animation-play-state: running;
-  }
-
-  .feedback-viewport[data-loop][data-visible]:not([data-manual]):hover .feedback-track {
+  .feedback-viewport[data-loop]:not([data-manual]):hover .feedback-track {
     animation-play-state: paused;
   }
 }
