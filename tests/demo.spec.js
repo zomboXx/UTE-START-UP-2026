@@ -57,7 +57,7 @@ test('landing is preserved and links to the isolated demo; responsive layout',as
   await expect(page.locator('#download')).toBeAttached();
   await page.locator('.hero-actions').getByRole('link',{name:'Trải nghiệm thử'}).click();
   await expect(page).toHaveURL(/\/try\/$/);
-  await expect(page.getByRole('heading',{name:/Bắt đầu nhé/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Bắt đầu từ bạn/})).toBeVisible();
   await page.getByRole('button',{name:'Dùng hồ sơ mẫu An',exact:true}).click();
   for(const [width,height] of [[1440,1000],[390,844],[320,640],[844,390]]){
     await page.setViewportSize({width,height});
@@ -83,16 +83,18 @@ test('tasks persist, escaped text stays text, checkout drives the real demo char
   await expect(page.getByText('1 / 3 việc đã hoàn thành',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Thống kê',exact:true}).click();
   await expect(page.locator('.stat-value')).toContainText('1 việc hoàn thành');
-  await page.getByRole('button',{name:'Kết nối thống kê sử dụng',exact:true}).click();
-  await expect(page.getByRole('dialog')).toContainText('hiện chưa có trên bản trải nghiệm thử');
+  await expect(page.getByRole('link',{name:'Mở trang tải Android',exact:true})).toHaveAttribute('href','../#download');
+  await expect(page.getByText('Trình duyệt chỉ xem được dữ liệu Brain10 bạn lưu tại đây.',{exact:false})).toBeVisible();
 });
 
 test('fixed schedules gate sample planning, prevent overlaps and persist confirmation without AI',async({page,baseURL})=>{
   const external=[];page.on('request',r=>{if(new URL(r.url()).origin!==new URL(baseURL).origin)external.push(r.url());});
   await enter(page);
   await page.getByRole('button',{name:'Lịch trình',exact:true}).click();
+  await page.getByText('Thử lịch mẫu',{exact:true}).click();
   await expect(page.getByRole('button',{name:'Xem kế hoạch học mẫu',exact:true})).toBeDisabled();
   await fixed(page);
+  await page.getByText('Thử lịch mẫu',{exact:true}).click();
   await page.getByRole('button',{name:'Xem kế hoạch học mẫu',exact:true}).click();
   await expect(page.getByRole('dialog')).toContainText('KHÔNG DÙNG AI');
   await page.getByRole('button',{name:'Xác nhận thêm vào lịch',exact:true}).click();
@@ -139,7 +141,7 @@ test('local group, check-in, unsupported invitation and data reset',async({page}
   await page.getByLabel('Tên vòng tròn',{exact:true}).fill('Cùng nhau qua môn');
   await page.getByLabel('Cam kết chung',{exact:true}).fill('Mỗi ngày một phiên học');
   await page.getByLabel('Tên bạn đồng hành (tùy chọn)',{exact:true}).fill('Bình\nChi');
-  await page.getByRole('button',{name:'Tạo vòng tròn mẫu',exact:true}).click();
+  await page.getByRole('button',{name:'Tạo vòng tròn',exact:true}).click();
   await page.getByRole('button',{name:'Tôi đã giữ cam kết',exact:true}).click();
   await expect(page.getByRole('button',{name:'Đã giữ cam kết hôm nay',exact:true})).toBeDisabled();
   await page.getByRole('button',{name:'Mời bạn đồng hành',exact:true}).click();
@@ -148,16 +150,16 @@ test('local group, check-in, unsupported invitation and data reset',async({page}
   await page.getByRole('button',{name:'Hồ sơ và widget',exact:true}).click();
   await page.getByRole('button',{name:'Xóa dữ liệu trải nghiệm',exact:true}).click();
   await page.getByRole('button',{name:'Xóa dữ liệu và bắt đầu lại',exact:true}).click();
-  await expect(page.getByRole('heading',{name:/Bắt đầu nhé/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Bắt đầu từ bạn/})).toBeVisible();
 });
 
-test('activity validates rolling 24h and unavailable photo preserves the form',async({page})=>{
+test('activity validates rolling 24h and keeps the chosen photo and text',async({page})=>{
   await enter(page);
   await page.getByRole('button',{name:'Ghi hoạt động',exact:true}).click();
   await page.getByLabel('Bạn vừa làm gì?',{exact:true}).fill('Chạy bộ');
-  await page.getByRole('button',{name:'Thêm ảnh minh chứng',exact:true}).click();
+  await page.locator('#activity-photo').setInputFiles({name:'proof.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jFZkAAAAASUVORK5CYII=','base64')});
   await expect(page.getByLabel('Bạn vừa làm gì?',{exact:true})).toHaveValue('Chạy bộ');
-  await expect(page.getByRole('dialog')).toContainText('hiện chưa có');
+  await expect(page.getByAltText('Ảnh minh chứng đã chọn')).toBeVisible();
   const start=page.getByLabel('Bắt đầu',{exact:true}),original=await start.inputValue();
   await start.fill('2020-01-01T07:00');
   await page.getByRole('button',{name:'Lưu hoạt động',exact:true}).click();
@@ -165,4 +167,5 @@ test('activity validates rolling 24h and unavailable photo preserves the form',a
   await start.fill(original);
   await page.getByRole('button',{name:'Lưu hoạt động',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Chạy bộ',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')).activities.at(-1).photo)).toMatch(/^data:image\/jpeg;base64,/);
 });

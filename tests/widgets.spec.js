@@ -13,7 +13,7 @@ test('launcher can be linked directly; widgets require setup and retain new bran
   await expect(page.getByRole('region',{name:'Widget Ghi nhanh 2 x 2',exact:true})).toBeVisible();
   await expect(page.locator('.launcher-app-icon image').first()).toHaveAttribute('href','/assets/brand-source.png');
   await page.getByRole('button',{name:'Thêm việc bằng văn bản từ widget',exact:true}).click();
-  await expect(page.getByRole('heading',{name:/Bắt đầu nhé/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Bắt đầu từ bạn/})).toBeVisible();
   await page.getByRole('button',{name:'Dùng hồ sơ mẫu An',exact:true}).click();
   await page.getByRole('button',{name:'Màn hình chính Widgets',exact:true}).click();
   await expect(page.locator('#launcher')).toContainText('0 / 2 việc đã hoàn thành');
@@ -62,8 +62,8 @@ test('completed widgets suggest tomorrow; voice is disclosed; widgets fit small 
   await page.getByLabel('Bạn muốn làm gì?',{exact:true}).fill('Việc ngày mai');
   await page.getByRole('button',{name:'Thêm vào danh sách',exact:true}).click();
   await page.getByRole('button',{name:'Thêm việc bằng giọng nói từ widget',exact:true}).click();
-  await expect(page.getByRole('dialog')).toContainText('hiện chưa có trên bản trải nghiệm thử');
-  await page.getByRole('button',{name:'Đã hiểu',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Ghi nhanh bằng giọng nói',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Đóng',exact:true}).click();
   for(const [width,height] of [[1440,1000],[390,844],[320,640],[844,390]]){
     await page.setViewportSize({width,height});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();

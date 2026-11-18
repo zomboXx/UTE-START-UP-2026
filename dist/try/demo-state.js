@@ -1,4 +1,6 @@
-const collections = new Set(['tasks', 'commitments', 'plan', 'activities', 'sessions']);
+import {upgradeCircles} from './parity-model.js?v=0.6.7';
+const requiredCollections = ['tasks', 'commitments', 'plan', 'activities', 'sessions'];
+const collections = new Set([...requiredCollections, 'circles', 'checkins']);
 
 export function readDemoState(raw) {
   let saved;
@@ -6,7 +8,7 @@ export function readDemoState(raw) {
   catch { return null; }
   return saved?.version === 1 && typeof saved.ready === 'boolean' &&
     typeof saved.profile?.name === 'string' &&
-    [...collections].every(key => Array.isArray(saved[key])) ? saved : null;
+    requiredCollections.every(key => Array.isArray(saved[key])) ? upgradeCircles(saved) : null;
 }
 
 export const sameState = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -44,7 +46,7 @@ export function mergeDemoState(before, local, latest) {
   const merged = mergeFields(before, local, latest);
   merged.profile = mergeFields(before.profile, local.profile, latest.profile);
   for (const key of collections) {
-    merged[key] = mergeRecords(before[key], local[key], latest[key]);
+    merged[key] = mergeRecords(before[key] || [], local[key] || [], latest[key] || []);
   }
   if (before.focus?.start !== latest.focus?.start) {
     merged.focus = latest.focus;

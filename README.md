@@ -32,14 +32,15 @@
 
 ## Trải nghiệm
 
-Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập trung và ghi lại kết quả. Repo này chứa **trang giới thiệu dự án** và **bản trải nghiệm trên trình duyệt**, dựa trên giao diện Android 0.6.3.
+Brain10 giúp người dùng chọn việc cần làm, dành thời gian tập trung và ghi lại kết quả. Repo này chứa **trang giới thiệu dự án** và **bản trải nghiệm trên trình duyệt**, theo luồng sản phẩm Android 0.6.7.
 
-1. Mở bản trải nghiệm và chọn **Dùng hồ sơ mẫu An**.
+1. Mở bản web, nhập hồ sơ và chọn **Dùng không đăng nhập**. Chọn **Dùng hồ sơ mẫu An** nếu muốn thử với dữ liệu minh họa.
 2. Ở tab **Hôm nay**, thêm một việc hoặc thử **Check-out** một việc có sẵn.
 3. Ở tab **Lịch trình**, thêm lịch cố định và chọn **Lên kế hoạch cùng AI**. Chọn **Dùng AI trên thiết bị** để model Qwen2.5 soạn nội dung một buổi ôn ngay trong trình duyệt. Lần đầu tải khoảng 512 MB. Bạn cũng có thể dùng mã beta để tạo lịch qua PoolAI.
-4. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
+4. Ở tab **Thống kê**, chọn tuần và chạm từng ngày để xem việc hoàn thành, phiên tập trung và hoạt động tự ghi. Tab **Nhóm** hỗ trợ nhiều vòng tròn, check-in và chuỗi ngày cục bộ.
+5. Ở tab **Tập trung**, đặt thời lượng và bắt đầu bộ đếm. Bạn có thể thử hai widget mô phỏng từ chế độ **Màn hình chính**.
 
-Dữ liệu demo được lưu trong trình duyệt. Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://zomboxx.github.io/UTE-START-UP-2026/try/?view=launcher)
+Dữ liệu được lưu trong trình duyệt. [Đối chiếu với Android và các giới hạn nền tảng](WEB_MOBILE_PARITY.md). Thống kê thời gian sử dụng thiết bị, hạn chế ứng dụng và widget hệ thống cần app Android. [Chi tiết bản trải nghiệm](DEMO.md) · [Mở màn hình widget](https://zomboxx.github.io/UTE-START-UP-2026/try/?view=launcher)
 
 ## Chạy cục bộ
 
@@ -90,7 +91,7 @@ Gói Free có thể cần khoảng một phút để khởi động sau khi ít 
 <details>
 <summary>Thông tin APK</summary>
 
-[Metadata bản cài](dist/release.json) điều khiển thông tin và nút tải. APK thử nghiệm Android 0.6.3 được phục vụ qua [GitHub Releases](https://github.com/zomboXx/UTE-START-UP-2026/releases/tag/android-v0.6.3-beta). Server cục bộ tìm bản thử tại `../mobile/artifacts/brain10-android-debug.apk` hoặc đường dẫn do `BRAIN10_LOCAL_APK` chỉ định.
+[Metadata bản cài](dist/release.json) điều khiển thông tin và nút tải. APK công khai Android 0.6.6 được phục vụ qua [GitHub Releases](https://github.com/zomboXx/UTE-START-UP-2026/releases/tag/android-v0.6.6-beta). Server cục bộ tìm bản thử tại `../mobile/artifacts/brain10-android-debug.apk` hoặc đường dẫn do `BRAIN10_LOCAL_APK` chỉ định.
 
 Khi phát hành, đưa APK đã kiểm chứng lên GitHub Releases và cập nhật phiên bản, kích thước, SHA-256, URL tải và trạng thái kiểm thử thiết bị trong metadata. Kiểm tra điều kiện chấp nhận URL tại [dist/site.js](dist/site.js).
 
