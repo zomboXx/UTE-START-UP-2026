@@ -28,6 +28,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 const uid = () => crypto.randomUUID();
 const dateKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 function dateOffset(offset) { const date = new Date(); date.setHours(0,0,0,0); date.setDate(date.getDate()+offset); return date; }
+const dateOffsetFromKey=key=>{const [y,m,d]=key.split('-').map(Number),today=new Date();return Math.round((Date.UTC(y,m-1,d)-Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()))/86400000);};
 const dayLabel = key => { const d = new Date(`${key}T12:00:00`); return `${d.getDate()}/${d.getMonth()+1}`; };
 const timeText = minutes => `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
 const minuteValue = value => { const [h,m] = value.split(':').map(Number); return h*60+m; };
@@ -263,7 +264,7 @@ function renderHome() {
   const percentage = entries.length ? Math.round(done/entries.length*100) : 0;
   const name = state.profile.name.trim().split(/\s+/).at(-1) || 'bạn';
   const greeting = new Date().getHours()<12?'Chào buổi sáng':new Date().getHours()<18?'Chào buổi chiều':'Chào buổi tối';
-  screen.innerHTML = `<div class="screen-body grow"><h1 class="screen-title">${greeting}, ${esc(name)}</h1><p class="screen-subtitle">${!entries.length?'Một ngày có chủ đích. Bắt đầu bằng một việc nhỏ.':done===entries.length?'Bạn đã hoàn thành những điều quan trọng. Nghỉ một chút nhé.':`Còn ${entries.length-done} việc cần làm. Cứ từng bước, theo nhịp của bạn.`}</p><div class="card row"><div class="ring" style="--progress:${percentage}%"><span>${percentage}%</span></div><div class="flex"><strong class="small">Nhịp ngày</strong><p class="tiny muted">${done} / ${entries.length} việc đã hoàn thành</p></div><button class="round-add" data-action="activity" aria-label="Ghi hoạt động">${icon('plus')}</button></div><div class="section-row"><h2>${selectedDay?'Việc ngày mai':'Việc hôm nay'}</h2><time>${dayLabel(day)}</time><button class="text-add" data-action="add-task">${icon('plus')} Thêm</button></div><div class="chips"><button class="chip ${!selectedDay?'selected':''}" data-action="day" data-day="0">Hôm nay</button><button class="chip ${selectedDay?'selected':''}" data-action="day" data-day="1">Ngày mai</button></div>${entries.length?`<div class="card task-list">${entries.map(taskRow).join('')}</div>`:`<div class="card empty">${icon('sun')}<h3>Chừa chỗ cho điều quan trọng.</h3><p>Chọn 2–3 việc bạn muốn hoàn thành.<br>Lịch đã xác nhận cũng sẽ có mặt ở đây.</p><button class="text-button" data-action="add-task">Thêm việc đầu tiên</button></div>`}${state.activities.length?`<div class="section-row"><h2>Những điều đã làm</h2><button class="text-button" data-action="activity-history">Xem tất cả (${state.activities.length})</button></div>${activityHistory(state.activities).slice(0,2).map(a=>activityRow(a)).join('')}`:''}</div><div class="quick-add"><button data-action="add-task">${icon('spark')} Ghi nhanh điều cần làm…</button><button class="mic-button" data-action="voice" aria-label="Thêm bằng giọng nói">${icon('mic')}</button></div>`;
+  screen.innerHTML = `<div class="screen-body grow"><h1 class="screen-title">${greeting}, ${esc(name)}</h1><p class="screen-subtitle">${!entries.length?'Một ngày có chủ đích. Bắt đầu bằng một việc nhỏ.':done===entries.length?'Bạn đã hoàn thành những điều quan trọng. Nghỉ một chút nhé.':`Còn ${entries.length-done} việc cần làm. Cứ từng bước, theo nhịp của bạn.`}</p><div class="card row"><div class="ring" style="--progress:${percentage}%"><span>${percentage}%</span></div><div class="flex"><strong class="small">Nhịp ngày</strong><p class="tiny muted">${done} / ${entries.length} việc đã hoàn thành</p></div><button class="round-add" data-action="activity" aria-label="Ghi hoạt động">${icon('plus')}</button></div><div class="section-row"><h2>${selectedDay===0?'Việc hôm nay':selectedDay===1?'Việc ngày mai':'Việc ngày '+dayLabel(day)}</h2><time>${dayLabel(day)}</time><button class="text-add" data-action="add-task">${icon('plus')} Thêm</button></div><div class="chips"><button class="chip ${!selectedDay?'selected':''}" data-action="day" data-day="0">Hôm nay</button><button class="chip ${selectedDay===1?'selected':''}" data-action="day" data-day="1">Ngày mai</button><label class="day-picker">Chọn ngày<input id="task-date" type="date" value="${day}" aria-label="Chọn ngày công việc"></label></div>${entries.length?`<div class="card task-list">${entries.map(taskRow).join('')}</div>`:`<div class="card empty">${icon('sun')}<h3>Chừa chỗ cho điều quan trọng.</h3><p>Chọn 2–3 việc bạn muốn hoàn thành.<br>Lịch đã xác nhận cũng sẽ có mặt ở đây.</p><button class="text-button" data-action="add-task">Thêm việc đầu tiên</button></div>`}${state.activities.length?`<div class="section-row"><h2>Những điều đã làm</h2><button class="text-button" data-action="activity-history">Xem tất cả (${state.activities.length})</button></div>${activityHistory(state.activities).slice(0,2).map(a=>activityRow(a)).join('')}`:''}</div><div class="quick-add"><button data-action="add-task">${icon('spark')} Ghi nhanh điều cần làm…</button><button class="mic-button" data-action="voice" aria-label="Thêm bằng giọng nói">${icon('mic')}</button></div>`;
   const overdue = selectedDay === 0 ? overdueWork(day) : [];
   if (overdue.length) {
     screen.querySelector('.task-list, .empty').insertAdjacentHTML('afterend',
@@ -291,7 +292,7 @@ function recipientChoices(){const members=[...new Map(state.circles.flatMap(circ
 function addTask(id=null) {
   const item=typeof id==='string'?state.tasks.find(t=>t.id===id):null;
   if(typeof id==='string'&&!item){toast('Công việc này đã bị xóa.');return;}
-  showModal(item?'Sửa công việc':'Việc bạn muốn làm',`<form id="task-form"><input type="hidden" name="id" value="${esc(item?.id || '')}"><label class="field">Bạn muốn làm gì?<input name="title" value="${esc(item?.title || '')}" maxlength="140" placeholder="VD: Đọc 10 trang sách" required autofocus></label><div class="field-grid"><label class="field">Thời lượng (phút)<input name="duration" type="number" min="1" max="480" value="${item?.duration ?? 30}" required></label><label class="field">Ngày thực hiện${item?`<input type="date" name="date" value="${esc(item.day)}" required ${item.done?'readonly':''}>`:`<select name="day"><option value="0" ${!selectedDay?'selected':''}>Hôm nay</option><option value="1" ${selectedDay?'selected':''}>Ngày mai</option></select>`}</label></div>${item?.done?'<p class="field-hint">Việc đã hoàn thành giữ nguyên ngày thực hiện và kết quả check-out.</p>':''}<label class="field">Ghi chú (tùy chọn)<textarea name="note" maxlength="1000" placeholder="Một bước cụ thể để bắt đầu…">${esc(item?.note || '')}</textarea></label><p id="form-error" class="form-error" role="alert"></p><button class="button full">${item?'Lưu thay đổi':'Thêm vào danh sách'}</button></form>`);
+  showModal(item?'Sửa công việc':'Việc bạn muốn làm',`<form id="task-form"><input type="hidden" name="id" value="${esc(item?.id || '')}"><label class="field">Bạn muốn làm gì?<input name="title" value="${esc(item?.title || '')}" maxlength="140" placeholder="VD: Đọc 10 trang sách" required autofocus></label><div class="field-grid"><label class="field">Thời lượng (phút)<input name="duration" type="number" min="1" max="480" value="${item?.duration ?? 30}" required></label><label class="field">Ngày thực hiện${item||![0,1].includes(selectedDay)?`<input type="date" name="date" value="${esc(item?.day || dateKey(dateOffset(selectedDay)))}" required ${item?.done?'readonly':''}>`:`<select name="day"><option value="0" ${!selectedDay?'selected':''}>Hôm nay</option><option value="1" ${selectedDay?'selected':''}>Ngày mai</option></select>`}</label></div>${item?.done?'<p class="field-hint">Việc đã hoàn thành giữ nguyên ngày thực hiện và kết quả check-out.</p>':''}<label class="field">Ghi chú (tùy chọn)<textarea name="note" maxlength="1000" placeholder="Một bước cụ thể để bắt đầu…">${esc(item?.note || '')}</textarea></label><p id="form-error" class="form-error" role="alert"></p><button class="button full">${item?'Lưu thay đổi':'Thêm vào danh sách'}</button></form>`);
 }
 function taskOptions(id){
   const item=state.tasks.find(t=>t.id===id);if(!item)return;
@@ -313,7 +314,7 @@ async function moveTask(id,day){
   const item=state.tasks.find(t=>t.id===id);if(!item)return;
   if(item.done){toast('Việc đã hoàn thành giữ nguyên ngày thực hiện.');return;}
   if(focusUses(id)){showModal('Phiên tập trung đang chạy','<p class="modal-copy">Kết thúc phiên gắn với công việc này trước khi dời ngày hoặc xóa. Bộ đếm hiện tại được giữ nguyên.</p>');return;}
-  try{await updateLocalRecord('tasks',id,{day:taskChanges(item,{...item,day}).day});modal.close();render();toast('Đã dời công việc sang '+dayLabel(day)+'.');}catch(e){toast(e.message);}
+  try{await updateLocalRecord('tasks',id,{day:taskChanges(item,{...item,day}).day});selectedDay=dateOffsetFromKey(day);modal.close();render();toast('Đã dời công việc sang '+dayLabel(day)+'.');}catch(e){toast(e.message);}
 }
 function confirmDeleteRecord(collection,id){
   if(!['tasks','activities'].includes(collection))return;
@@ -837,13 +838,13 @@ document.addEventListener('submit',async event=>{
       const id=String(data.get('id') || ''),entry=id?state.tasks.find(t=>t.id===id):null;
       if(id&&!entry){error('Công việc này đã bị xóa. Đóng rồi mở lại danh sách.');return;}
       let patch;
-      try{patch=taskChanges(entry,{title,duration:data.get('duration'),day:id?String(data.get('date')):dateKey(dateOffset(Number(data.get('day')))),note:data.get('note')});}catch(e){error(e.message);return;}
+      try{patch=taskChanges(entry,{title,duration:data.get('duration'),day:data.get('date')?String(data.get('date')):dateKey(dateOffset(Number(data.get('day')))),note:data.get('note')});}catch(e){error(e.message);return;}
       if(entry&&patch.day!==entry.day&&focusUses(id)){error('Kết thúc phiên tập trung gắn với việc này trước khi dời ngày.');return;}
       const button=form.querySelector('button:not([type])');button.disabled=true;
       try{
         if(entry)await updateLocalRecord('tasks',id,patch);
         else{const task={id:uid(),...patch,done:false};state.tasks.push(task);if(!await save()){state.tasks=state.tasks.filter(t=>t.id!==task.id);throw new Error('Chưa lưu được công việc. Hãy thử lại.');}}
-        modal.close();render();toast(entry?'Đã lưu thay đổi công việc.':'Đã thêm việc vào nhịp ngày.');
+        selectedDay=dateOffsetFromKey(patch.day);modal.close();render();toast(entry?'Đã lưu thay đổi công việc.':'Đã thêm việc vào nhịp ngày.');
       }catch(e){error(e.message);}finally{button.disabled=false;}break;
     }
     case 'checkout-form':completeTask(form);break;
@@ -897,6 +898,7 @@ setInterval(()=>{
 render();
 
 document.addEventListener('input',event=>{
+  if(event.target.id==='task-date'&&event.target.value){selectedDay=dateOffsetFromKey(event.target.value);render();}
   if(event.target.id==='history-search'){historyFilter.search=event.target.value;renderHistoryRows();}
   if(event.target.id==='history-date'){historyFilter.date=event.target.value;renderHistoryRows();}
 });
