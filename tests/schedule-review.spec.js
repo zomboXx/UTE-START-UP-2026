@@ -1,0 +1,47 @@
+import {test,expect} from '@playwright/test';
+test('Starter generates without a code and retains five of six sessions across close and reload',async({page})=>{
+ let calls=0;
+ await page.setViewportSize({width:390,height:844});
+ await page.route('**/api/plans',async route=>{
+  if(route.request().method()==='GET')return route.fulfill({json:{quota:{limit:5,remaining:calls?4:5,used:calls?1:0,period:'2026-11'}}});
+  calls++;
+  expect(route.request().headers().authorization).toMatch(/^Guest [a-f0-9]{64}$/);
+  expect(route.request().headers()['x-brain10-request-id']).toMatch(/^[a-f0-9-]{36}$/);
+  const exam=new Date(Date.now()+8*86400000).toISOString().slice(0,10);
+  const sessions=Array.from({length:6},(_,i)=>{const day=new Date(Date.now()+(i+1)*86400000).toISOString().slice(0,10);return {title:`Luyện nói ${i+1}`,subject:'Tiếng Anh',start:`${day}T18:00:00+07:00`,end:`${day}T18:45:00+07:00`,examDate:exam,objectives:['Hỏi đường'],steps:['Luyện hội thoại'],expectedOutput:'Ba câu hỏi đường'};});
+  return route.fulfill({json:{schemaVersion:1,status:'draft',summary:'Sáu buổi luyện nói',questions:[],assumptions:[],sessions,quota:{limit:5,remaining:4,used:1,period:'2026-11'}}});
+ });
+ const button=name=>page.getByRole('button',{name,exact:true});
+ const stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')));
+ await page.goto('/try/');await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();
+ await button('Lịch trình').click();await button('Lên kế hoạch cùng AI ↗').click();
+ await expect(page.getByLabel('Mã thử AI của nhóm',{exact:true})).toHaveCount(0);
+ await expect(page.locator('#starter-quota')).toContainText('Còn 5/5 lượt');
+ await page.getByLabel('Bạn muốn đạt điều gì?',{exact:true}).fill('Luyện nói tiếng Anh khi đi du lịch');
+ await button('Tạo kế hoạch để xem trước').click();
+ await expect(page.getByRole('dialog')).toContainText('Còn 4/5 lượt');
+ await page.getByRole('button',{name:'Bỏ phiên này',exact:true}).first().click();
+ await expect(page.getByRole('dialog')).toContainText('Bạn đang giữ 5 trong 6 buổi đề xuất.');
+ await page.keyboard.press('Escape');await page.reload();
+ await button('Lịch trình').click();await button('Lên kế hoạch cùng AI ↗').click();
+ await expect(button('Bỏ phiên này')).toHaveCount(5);
+ expect(calls).toBe(1);expect((await stored()).plan).toHaveLength(0);
+ await page.screenshot({path:'../../output/user-review-068-20261119/web-draft-five.png'});
+ await button('Xác nhận thêm vào lịch').click();await expect(page.getByRole('dialog')).not.toBeVisible();await page.reload();await button('Lịch trình').click();
+ expect((await stored()).plan).toHaveLength(5);expect((await stored()).planningDraft).toBeNull();expect(calls).toBe(1);
+ await button('Bỏ khỏi lịch').first().click();await button('Hoàn tác').click();await expect(page.locator('#toast')).toContainText('Đã khôi phục');
+ await page.reload();expect((await stored()).plan).toHaveLength(5);
+});
+test('weekly deletion offers undo and restores the original weekdays and exact 10:00 end',async({page})=>{
+ const button=name=>page.getByRole('button',{name,exact:true});
+ await page.goto('/try/');await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();await button('Lịch trình').click();
+ await button('Thêm lịch cố định').click();
+ await page.getByLabel('Tên lịch',{exact:true}).fill('Đi học');
+ await page.getByLabel('Bắt đầu',{exact:true}).fill('08:00');await page.getByLabel('Kết thúc',{exact:true}).fill('10:00');
+ await button('Lưu lịch cố định').click();await expect(page.getByRole('dialog')).not.toBeVisible();
+ const read=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('brain10.web-demo.v1')).commitments);
+ const [original]=await read();expect(original.end).toBe(600);
+ await button('Xóa lịch Đi học').click();await expect.poll(read).toHaveLength(0);
+ await expect(page.locator('#toast')).toContainText('lặp hằng tuần');await button('Hoàn tác').click();await expect(page.locator('#toast')).toContainText('Đã khôi phục');
+ await page.reload();expect(await read()).toEqual([original]);
+});

@@ -1,0 +1,13 @@
+# Starter planning
+
+`GET /v1/plans` is public health. An installation generates an unguessable 32-byte guest identity and sends `Authorization: Guest <64 hex characters>`. An authenticated GET returns its current quota. POST also requires `X-Brain10-Request-Id`, retained across transport retries. Legacy private beta Bearer admission remains compatible with older Android builds.
+
+The planner signs quota RPCs to the existing Brain10 Admin Sites Worker using Ed25519. The private key derives from the server-only provider key. Sites pins the public key in runtime variable `BRAIN10_PLANNER_PUBLIC_KEY`; obtain its new value from planner health and deploy the saved Sites version after rotating `POOL_API_KEY`. Never copy the provider key to Sites, source, browser code or APKs.
+
+D1 migration `0002_planner_quota` on the Admin Site owns production counters. A conditional SQLite write reserves capacity before the model call, including across concurrent planner instances. Successful nonempty drafts count once; model failures and clarification responses do not consume monthly capacity. Expired reservations refund after three minutes. Identical successful retries receive the encrypted cached result for seven days; they do not invoke the model or consume another credit. AES-GCM encryption and decryption remain on the planner server.
+
+Current launch limits: five drafts per installation and calendar month in Vietnam, 15 per IP per day, and 50 globally per day. Daily safeguards can temporarily pause new drafts even when a particular installation has monthly capacity; the API explains this and does not charge that attempt. The guest allowance is installation/browser scoped, not a verified cross-device account entitlement. Clearing browser storage or reinstalling can create another identity; daily safeguards bound that abuse. Subscription activation and account synchronization are separate work.
+
+Fail closed if quota storage or signature verification fails. Never substitute an ephemeral process-memory monthly counter. Imported survey, report, billing and admin authentication records are independent of these quota tables.
+
+Tests: `test-server/starter.test.mjs` exercises signed RPC integration, failure refund, cached retry, exhaustion and service outage. The Site's `tests/planner-quota.test.mjs` exercises SQLite persistence across reopened connections, competing reservations, month boundaries, expirations, daily safeguards and signature checks. Browser tests stub model responses; an explicit live smoke test should create at most one synthetic plan and retry its same request ID.

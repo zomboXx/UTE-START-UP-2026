@@ -1,6 +1,6 @@
-# Brain10 web và Android 0.6.7
+# Brain10 web và Android 0.6.8
 
-Bản web ở `/try/` theo luồng sản phẩm Android 0.6.7. Web vẫn dùng HTML/JavaScript và dữ liệu trong trình duyệt; Android dùng Flutter/Kotlin và dữ liệu thiết bị. Hai bản chưa đồng bộ tài khoản hoặc dữ liệu.
+Bản web ở `/try/` theo luồng sản phẩm Android 0.6.8. Web vẫn dùng HTML/JavaScript và dữ liệu trong trình duyệt; Android dùng Flutter/Kotlin và dữ liệu thiết bị. Hai bản chưa đồng bộ tài khoản hoặc dữ liệu.
 
 | Phần | Hành vi chung |
 |---|---|
@@ -12,6 +12,10 @@ Bản web ở `/try/` theo luồng sản phẩm Android 0.6.7. Web vẫn dùng H
 | Hoạt động | Thời gian trong 24 giờ vừa qua, ảnh minh chứng riêng tư. Web nhận JPG/PNG/WebP, thu nhỏ ảnh để lưu cục bộ; không đưa ảnh vào yêu cầu AI. Báo lỗi và giữ form nếu chưa lưu được. |
 | Nhóm | Nhiều vòng tròn, bạn đồng hành cục bộ, check-in/nghỉ riêng theo nhóm/ngày, chuỗi ngày và ghi nhận có quyền xem phù hợp. Chưa gửi lời mời hoặc chia sẻ qua mạng trên cả hai bản. |
 | Hồ sơ/gói | Cùng danh mục VND từ `plans.json`: Starter, Focus Pro 39.000đ/tháng, Organization từ 29.000đ/người/tháng. Thanh toán/kích hoạt gói chưa hoàn thiện. |
+
+## Sửa luồng lập lịch 0.6.8
+
+Starter tạo kế hoạch không cần mã và hiển thị lượt còn lại từ máy chủ; mỗi bản cài/trình duyệt có 5 lượt/tháng. Bản nháp giữ qua đóng và tải lại, gồm đúng các buổi còn giữ. Xóa lịch cố định hoặc buổi học có Hoàn tác trong 10 giây. Android luôn mở bộ chọn giờ 24 giờ để không bị 10:00 thành 22:00 khi hệ thống dùng 12 giờ. Backend và giới hạn vận hành mô tả ở `server/STARTER.md`.
 
 ## Khác biệt do nền tảng
 

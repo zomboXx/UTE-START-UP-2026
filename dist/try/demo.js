@@ -4,7 +4,7 @@ import {reminderBoundary} from './wellbeing.js';
 import {periods,vietnamDay,addDays,weekStart,startTime,sessionStatus,calendarWeeks} from './calendar.js';
 import {githubPagesPlanningUrl} from './planning-endpoint.js';
 import {readDemoState,mergeDemoState,sameState} from './demo-state.js?v=0.6.7';
-// Private beta AI calls use a server-only provider key. No device permissions.
+// Starter AI calls use a server-only provider key and durable monthly quota.
 const planningUrl = location.hostname === 'zomboxx.github.io' ? githubPagesPlanningUrl : '/api/plans';
 const KEY = 'brain10.web-demo.v1';
 const paths = {
@@ -50,7 +50,8 @@ let displayedDay = dateKey();
 let phoneView = new URL(location.href).searchParams.get('view') === 'launcher' ? 'launcher' : 'app';
 let launcherMinute = -1;
 let reminderAudio=null;
-let aiBusy=false,aiDraft=null,aiSessions=[],betaCode='',aiTargetDate='';
+let aiBusy=false,aiDraft=state.planningDraft?.result ?? null,aiSessions=state.planningDraft?.sessions ?? [],aiTargetDate=state.planningDraft?.targetDate ?? '';
+let undoEntry=null,undoTimer;
 let aiController;
 let deviceWorker,deviceAbort;
 let scheduleView='list',calendarStart=weekStart(vietnamDay(Date.now())),calendarSpan=1,lastScheduleMinute=-1;
@@ -62,9 +63,11 @@ function adoptState(latest) {
   const changed = !sameState(state, latest);
   const reset = state.generation !== latest.generation;
   if (state.focus?.start !== latest.focus?.start || latest.wellbeingReminders === false) hideWellbeing();
+  const previousDraft=baseline.planningDraft;
   baseline = structuredClone(latest);
   state = latest;
-  if (reset) modal.close();
+  if (reset) {aiDraft=null;aiSessions=[];modal.close();}
+  else if(!aiBusy && !sameState(previousDraft,latest.planningDraft)){aiDraft=latest.planningDraft?.result ?? null;aiSessions=latest.planningDraft?.sessions ?? [];}
   if (changed && (reset || !screen.querySelector('#welcome-form:focus-within'))) render();
 }
 function save() {
@@ -100,7 +103,38 @@ window.addEventListener('storage', event => {
     if (latest) adoptState(latest);
   } catch { /* Preserve the current view if browser storage cannot be read. */ }
 });
-function toast(message) { const el = document.getElementById('toast'); el.textContent = message; el.classList.add('visible'); clearTimeout(timerNotice); timerNotice = setTimeout(() => el.classList.remove('visible'),4500); }
+function toast(message) { const el = document.getElementById('toast'); el.replaceChildren(document.createTextNode(message)); el.classList.remove('actionable'); el.classList.add('visible'); clearTimeout(timerNotice); timerNotice = setTimeout(() => el.classList.remove('visible'),4500); }
+async function removeSchedule(collection,id){
+  const index=state[collection].findIndex(entry=>entry.id===id);if(index<0)return;
+  const entry=structuredClone(state[collection][index]);state[collection].splice(index,1);
+  if(!await save()){state[collection].splice(index,0,entry);render();return;}
+  modal.close();render();
+  undoEntry={collection,index,entry};clearTimeout(undoTimer);
+  const el=document.getElementById('toast');toast(collection==='commitments'?'Đã xóa lịch lặp hằng tuần.':'Đã bỏ buổi học khỏi lịch.');
+  clearTimeout(timerNotice);el.classList.add('actionable');
+  const button=document.createElement('button');button.textContent='Hoàn tác';button.className='undo-schedule';button.dataset.action='undo-schedule';el.append(button);
+  undoTimer=setTimeout(()=>{undoEntry=null;el.classList.remove('visible','actionable');},10000);
+}
+function starterIdentity(){
+  const key=KEY+'.starter.identity';let token=localStorage.getItem(key);
+  if(!/^[a-f0-9]{64}$/.test(token||'')){
+    token=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');localStorage.setItem(key,token);
+  }
+  return token;
+}
+function quotaText(){const q=state.aiQuota;return q?.remaining!=null?`Còn ${q.remaining}/5 lượt trong tháng ${q.period}.`:'Đang kiểm tra lượt còn lại…';}
+async function refreshAIQuota(){
+  const field=document.getElementById('starter-quota');if(!field)return;
+  try{
+    const response=await fetch(planningUrl,{headers:{Authorization:`Guest ${starterIdentity()}`},signal:AbortSignal.timeout(20000)});
+    const data=await response.json();if(!response.ok||!data.quota)throw new Error();
+    state.aiQuota=data.quota;await save();if(field.isConnected)field.textContent=quotaText();
+  }catch{if(field.isConnected)field.textContent='Chưa kiểm tra được số lượt. Bạn có thể thử tạo kế hoạch hoặc mở lại sau.';}
+}
+async function persistAIDraft(){
+  state.planningDraft=aiDraft&&aiDraft.status==='draft'?{result:aiDraft,sessions:aiSessions,targetDate:aiTargetDate}:null;
+  return await save();
+}
 function showModal(title, content) {
   modal.classList.remove('calendar-expanded');
   modalContent.innerHTML = `<div class="modal-top"><h2 id="modal-title">${esc(title)}</h2><button class="icon-button" data-action="close" aria-label="Đóng">${icon('close')}</button></div>${content}`;
@@ -365,7 +399,8 @@ function openAI(){
   if(aiBusy){toast('AI đang tạo kế hoạch. Hãy chờ kết quả trước khi gửi tiếp.');return;}
   if(aiDraft){renderAIDraft();return;}
   const p=state.studyPreferences || defaultPreferences;
-  showModal('Kế hoạch học và luyện tập',`<form id="ai-form"><p id="ai-error" class="form-error" role="alert" tabindex="-1"></p><div id="ai-progress" class="notice" hidden><p role="status"></p><button type="button" class="text-button" data-action="cancel-ai">Hủy yêu cầu</button></div><span class="tag">AI THẬT · XEM TRƯỚC RỒI XÁC NHẬN</span><p class="modal-copy" style="margin-top:12px">${state.commitments.length} lịch cố định · khung ${timeText(p.startMinute)}–${timeText(p.endMinute)} · ${p.dailyMinutes} phút/ngày. Múi giờ Việt Nam.</p><details class="browser-ai-option"><summary class="text-button">AI chạy trong trình duyệt</summary><p class="field-hint">Tùy chọn riêng trên web, cần tải model khoảng 512 MB lần đầu.</p><button type="button" class="button secondary full" data-action="device-ai">Dùng AI trên thiết bị</button></details><label class="field">Mã thử AI của nhóm<input type="password" name="code" value="${esc(betaCode)}" autocomplete="off" maxlength="80" required placeholder="Mã dùng thử do nhóm Brain10 cung cấp"></label><span class="field-hint">Mã dùng thử do nhóm Brain10 cung cấp. Chỉ giữ trong bộ nhớ tab này.</span><label class="field">Bạn muốn đạt điều gì?<textarea name="request" maxlength="4000" required placeholder="Ví dụ, luyện nói tiếng Anh để tự tin khi đi du lịch.">${esc(state.profile.lastAIRequest || '')}</textarea></label><button type="button" class="text-button" data-action="ai-example">Dùng ví dụ học tiếng Anh</button><label class="field">Hạn hoàn thành (tùy chọn)<input type="date" name="targetDate" min="${dateKey(dateOffset(1))}" value="${esc(aiTargetDate)}"></label><p class="field-hint">Có thể ghi ngày trong mục tiêu hoặc chọn ở trên. Nếu chưa có hạn, Brain10 lên kế hoạch cho 7 ngày tới.</p><label class="field">Bạn đã biết gì, muốn tập thêm gì? (tùy chọn)<textarea name="learningContext" maxlength="6000" placeholder="Ví dụ, tôi biết từ vựng cơ bản nhưng còn ngại nói.">${esc(state.profile.learningContext || '')}</textarea></label><div class="notice">Khi tạo kế hoạch, mục tiêu, ngữ cảnh học, nhịp học và lịch được gửi qua backend tới PoolAI. Không gửi họ tên, sinh nhật, nhật ký, ảnh hay screen time. Yêu cầu này có sử dụng credit AI.</div><button class="button full" id="ai-submit">${icon('spark')} Tạo kế hoạch để xem trước</button><button type="button" class="text-button" data-action="automatic-plan">Xếp lịch theo giờ rảnh</button></form>`);
+  showModal('Kế hoạch học và luyện tập',`<form id="ai-form"><p id="ai-error" class="form-error" role="alert" tabindex="-1"></p><div id="ai-progress" class="notice" hidden><p role="status"></p><button type="button" class="text-button" data-action="cancel-ai">Hủy yêu cầu</button></div><span class="tag">AI THẬT · XEM TRƯỚC RỒI XÁC NHẬN</span><p class="modal-copy" style="margin-top:12px">${state.commitments.length} lịch cố định · khung ${timeText(p.startMinute)}–${timeText(p.endMinute)} · ${p.dailyMinutes} phút/ngày. Múi giờ Việt Nam.</p><details class="browser-ai-option"><summary class="text-button">AI chạy trong trình duyệt</summary><p class="field-hint">Tùy chọn riêng trên web, cần tải model khoảng 512 MB lần đầu.</p><button type="button" class="button secondary full" data-action="device-ai">Dùng AI trên thiết bị</button></details><div class="notice"><strong>Starter · 5 lượt lập kế hoạch mỗi tháng</strong><p id="starter-quota" role="status">${esc(quotaText())}</p><p class="field-hint">Không cần nhập mã. Chỉ tính lượt khi có kế hoạch để xem trước. Mở lại bản nháp và xác nhận lịch không tốn thêm lượt. Lượt gắn với trình duyệt này.</p></div><label class="field">Bạn muốn đạt điều gì?<textarea name="request" maxlength="4000" required placeholder="Ví dụ, luyện nói tiếng Anh để tự tin khi đi du lịch.">${esc(state.profile.lastAIRequest || '')}</textarea></label><button type="button" class="text-button" data-action="ai-example">Dùng ví dụ học tiếng Anh</button><label class="field">Hạn hoàn thành (tùy chọn)<input type="date" name="targetDate" min="${dateKey(dateOffset(1))}" value="${esc(aiTargetDate)}"></label><p class="field-hint">Có thể ghi ngày trong mục tiêu hoặc chọn ở trên. Nếu chưa có hạn, Brain10 lên kế hoạch cho 7 ngày tới.</p><label class="field">Bạn đã biết gì, muốn tập thêm gì? (tùy chọn)<textarea name="learningContext" maxlength="6000" placeholder="Ví dụ, tôi biết từ vựng cơ bản nhưng còn ngại nói.">${esc(state.profile.learningContext || '')}</textarea></label><div class="notice">Khi tạo kế hoạch, mục tiêu, ngữ cảnh học, nhịp học và lịch được gửi qua backend tới PoolAI. Không gửi họ tên, sinh nhật, nhật ký, ảnh hay screen time. Yêu cầu này có sử dụng credit AI.</div><button class="button full" id="ai-submit">${icon('spark')} Tạo kế hoạch để xem trước</button><button type="button" class="text-button" data-action="automatic-plan">Xếp lịch theo giờ rảnh</button></form>`);
+  void refreshAIQuota();
 }
 function openAutomaticPlan(){
   if(aiBusy){toast('Đợi yêu cầu AI hiện tại kết thúc.');return;}
@@ -417,6 +452,8 @@ async function generateDeviceAI(data){
     if(!steps.length)throw new Error('AI chưa tạo được nội dung.');
     const result={...draft,source:'device-ai',deviceInput:{title,context,examDate},model:'Qwen2.5-0.5B-Instruct',summary:'AI trên thiết bị đã soạn nội dung, Brain10 đã chọn khung giờ rảnh.',sessions:[{...session,objectives:[title],steps,expectedOutput:''}]};
     aiSessions=convertDraft(result);aiDraft=result;
+    if(result.quota)state.aiQuota=result.quota;
+    await persistAIDraft();
     renderAIDraft();
   }catch(error){
     deviceWorker?.terminate();deviceWorker=null;
@@ -428,9 +465,8 @@ async function generateDeviceAI(data){
 }
 async function generateAI(data){
   if(aiBusy)return;
-  betaCode=String(data.get('code')).trim();
   const request=String(data.get('request')).trim(),learningContext=String(data.get('learningContext')).trim();
-  if(!request || !betaCode)return;
+  if(!request)return;
   aiTargetDate=String(data.get('targetDate') || '');
   const button=document.getElementById('ai-submit');
   const controller=new AbortController();
@@ -452,7 +488,11 @@ async function generateAI(data){
   const timeout=setTimeout(()=>controller.abort(new DOMException('timeout','TimeoutError')),105000);
   state.profile.lastAIRequest=request;state.profile.learningContext=learningContext;save();
   try{
-    const response=await fetch(planningUrl,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${betaCode}`},body:JSON.stringify(makePlanningRequest(state,request,learningContext,aiTargetDate)),signal:controller.signal});
+    const payload=makePlanningRequest(state,request,learningContext,aiTargetDate);delete payload.now;
+    const fingerprint=JSON.stringify(payload);
+    if(state.aiAttempt?.fingerprint!==fingerprint)state.aiAttempt={id:uid(),fingerprint};
+    if(!await save())throw new Error('Chưa lưu được yêu cầu. Hãy cho phép trang lưu dữ liệu rồi thử lại.');
+    const response=await fetch(planningUrl,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Guest ${starterIdentity()}`,'X-Brain10-Request-Id':state.aiAttempt.id},body:fingerprint,signal:controller.signal});
     const result=await response.json().catch(error=>{
       if(response.status===502 || response.status===503)return {};
       throw error;
@@ -460,11 +500,14 @@ async function generateAI(data){
     if(response.status===503 || (response.status===502 && (!result.error || /HTTP 5\d\d/.test(result.error))))throw new Error('AI qua mạng đang tạm gián đoạn. Chọn Dùng AI trên thiết bị để tiếp tục.');
     if(!response.ok)throw new Error(result.error || 'Chưa tạo được lịch. Hãy thử lại.');
     aiSessions=convertDraft(result);aiDraft=result;
+    if(result.quota)state.aiQuota=result.quota;
+    await persistAIDraft();
     if(modal.open && document.getElementById('ai-form'))renderAIDraft();else toast('Lịch AI đã sẵn sàng. Mở mục AI để xem kết quả.');
   }catch(error){
     if(error.name==='AbortError')return;
     const message=error.name==='TimeoutError'?'Dịch vụ phản hồi quá lâu. Hãy thử lại sau ít phút. Nội dung đã nhập vẫn được giữ tại đây.':error.message || 'Không kết nối được dịch vụ AI.';
     showFormError(document.getElementById('ai-error'),message);
+    void refreshAIQuota();
   }finally{
     clearInterval(ticker);clearTimeout(timeout);
     if(aiController===controller)aiController=null;
@@ -484,7 +527,7 @@ function renderAIDraft(){
   const automatic=aiDraft.source==='automatic';
   const device=aiDraft.source==='device-ai';
   const title=device?'Lịch AI trên thiết bị':automatic?'Lịch theo giờ rảnh':'Lịch AI đề xuất';
-  showModal(title,`<span class="tag">${automatic?'XẾP LỊCH TỰ ĐỘNG':esc(aiDraft.model || 'PoolAI')} · CHƯA LƯU</span><h3 class="small" style="margin:15px 0">${esc(aiDraft.summary)}</h3>${aiDraft.questions.map(q=>`<p class="notice"><strong>Cần bổ sung:</strong> ${esc(q)}</p>`).join('')}${aiDraft.assumptions.map(a=>`<p class="tiny muted" style="margin-bottom:8px">Giả định: ${esc(a)}</p>`).join('')}${aiSessions.map(p=>`<article class="card session"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><h3>${esc(p.title)}</h3><p>${esc(p.subject)}</p><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul><details${device?' open':''}><summary class="text-button">Các bước học & đầu ra</summary><ol class="tiny muted">${p.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p>${esc(p.expectedOutput)}</p></details><button class="text-button" data-action="remove-ai-session" data-id="${p.id}">Bỏ phiên này</button></article>`).join('')}<p class="field-hint" style="margin:12px 0">Đối chiếu nội dung với đề cương. Chỉ thêm vào lịch sau khi bạn xác nhận; khung giờ sẽ được kiểm tra lại.</p>${aiSessions.length?'<button class="button full" data-action="accept-ai">Xác nhận thêm vào lịch</button>':''}${automatic?'':'<button class="text-button" data-action="edit-ai" style="width:100%;margin-top:8px">Chỉnh mục tiêu / bổ sung thông tin</button>'}`);
+  showModal(title,`<span class="tag">${automatic?'XẾP LỊCH TỰ ĐỘNG':esc(aiDraft.model || 'PoolAI')} · CHƯA LƯU</span><h3 class="small" style="margin:15px 0">${esc(aiSessions.length < aiDraft.sessions.length ? `Bạn đang giữ ${aiSessions.length} trong ${aiDraft.sessions.length} buổi đề xuất.` : aiDraft.summary)}</h3><p class="field-hint">${aiSessions.length} buổi · Bản nháp được giữ trên trình duyệt này khi bạn đóng hoặc tải lại trang.</p><p class="field-hint">${state.aiQuota ? esc(quotaText()) : ''}</p>${aiDraft.questions.map(q=>`<p class="notice"><strong>Cần bổ sung:</strong> ${esc(q)}</p>`).join('')}${aiDraft.assumptions.map(a=>`<p class="tiny muted" style="margin-bottom:8px">Giả định: ${esc(a)}</p>`).join('')}${aiSessions.map(p=>`<article class="card session"><span class="tag">${dayLabel(p.day)} · ${timeText(p.start)}–${timeText(p.start+p.duration)}</span><h3>${esc(p.title)}</h3><p>${esc(p.subject)}</p><ul>${p.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul><details${device?' open':''}><summary class="text-button">Các bước học & đầu ra</summary><ol class="tiny muted">${p.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><p>${esc(p.expectedOutput)}</p></details><button class="text-button" data-action="remove-ai-session" data-id="${p.id}">Bỏ phiên này</button></article>`).join('')}<p class="field-hint" style="margin:12px 0">Đối chiếu nội dung với đề cương. Chỉ thêm vào lịch sau khi bạn xác nhận; khung giờ sẽ được kiểm tra lại.</p>${aiSessions.length?'<button class="button full" data-action="accept-ai">Xác nhận thêm vào lịch</button>':''}<button class="text-button" data-action="discard-ai">Bỏ bản nháp</button>${automatic?'':'<button class="text-button" data-action="edit-ai" style="width:100%;margin-top:8px">Chỉnh mục tiêu / bổ sung thông tin</button>'}`);
 }
 function renderFocus() {
   const active = !!state.focus;
@@ -617,8 +660,16 @@ const actions = {
   protection:()=>unavailable('Bảo vệ tập trung trên Android','APK xin Accessibility để phát hiện ứng dụng cần hạn chế, VPN cục bộ để chặn mạng trong phiên và thông báo nếu bạn cho phép. Bản web không có các quyền đó, không đọc nội dung tin nhắn. Chỉ thông tin lập lịch bạn chủ động gửi mới tới API.'),
   invite:()=>unavailable('Mời bạn đồng hành','Mời thành viên, chia sẻ thực và đồng bộ nhóm chưa được triển khai. Tên bạn đồng hành và cam kết hiện lưu trong trình duyệt này, chưa đồng bộ sang thiết bị khác.'),
   'add-fixed':()=>fixedEditor(), 'edit-fixed':el=>fixedEditor(el.dataset.id),
-  'delete-fixed':async el=>{state.commitments=state.commitments.filter(c=>c.id!==el.dataset.id);const saved=await save();render();if(saved)toast('Đã bỏ lịch cố định.');},
-  'delete-plan':async el=>{state.plan=state.plan.filter(p=>p.id!==el.dataset.id);await save();modal.close();render();},
+  'delete-fixed':el=>removeSchedule('commitments',el.dataset.id),
+  'delete-plan':el=>removeSchedule('plan',el.dataset.id),
+  'undo-schedule':async()=>{
+    if(!undoEntry)return;const {collection,index,entry}=undoEntry;undoEntry=null;clearTimeout(undoTimer);
+    if(!state[collection].some(e=>e.id===entry.id))state[collection].splice(Math.min(index,state[collection].length),0,entry);
+    const saved=await save();render();if(saved)toast('Đã khôi phục lịch.');
+  },
+  'discard-ai':()=>showModal('Bỏ bản nháp AI?',`<p class="modal-copy">Các buổi đề xuất sẽ bị bỏ. Tạo kế hoạch mới có thể dùng thêm một lượt Starter.</p><button class="button full" data-action="confirm-discard-ai">Bỏ bản nháp</button><button class="text-button" data-action="return-ai">Giữ bản nháp</button>`),
+  'return-ai':renderAIDraft,
+  'confirm-discard-ai':async()=>{aiDraft=null;aiSessions=[];state.aiAttempt=null;await persistAIDraft();openAI();},
   'sample-plan':samplePlan,
   'schedule-list':()=>{scheduleView='list';render();},
   'schedule-calendar':()=>{scheduleView='calendar';render();},
@@ -630,15 +681,17 @@ const actions = {
   'ai-example':()=>{const field=document.querySelector('#ai-form [name="request"]');if(field)field.value='Tôi muốn học 20 câu tiếng Anh để hỏi đường và gọi món khi đi du lịch.';},
   'cancel-ai':()=>{aiController?.abort();},
   'study-preferences':editStudyPreferences,
-  'edit-ai':()=>{
+  'edit-ai':async()=>{
     const deviceInput=aiDraft?.deviceInput;
     aiDraft=null;
+    await persistAIDraft();
     if(deviceInput)openDeviceAI(deviceInput);else openAI();
   },
-  'remove-ai-session':el=>{aiSessions=aiSessions.filter(p=>p.id!==el.dataset.id);renderAIDraft();},
+  'remove-ai-session':async el=>{aiSessions=aiSessions.filter(p=>p.id!==el.dataset.id);await persistAIDraft();renderAIDraft();},
   'accept-ai':async()=>{
     const invalid=validateAcceptance(aiSessions,state);if(invalid){toast(invalid);return;}
     state.plan.push(...aiSessions);aiSessions=[];aiDraft=null;
+    state.planningDraft=null;state.aiAttempt=null;
     const saved=await save();modal.close();tab=1;switchPhone('app');if(saved)toast('Đã thêm lịch ôn.');
   },
   'confirm-plan':async()=>{state.plan.push(...preview);preview=[];const saved=await save();modal.close();render();if(saved)toast('Đã thêm các phiên mẫu vào lịch.');},
@@ -691,6 +744,7 @@ document.addEventListener('submit',async event=>{
       try{
         const draft=makeAutomaticDraft(state,title,data.get('examDate'));
         aiSessions=convertDraft(draft);aiDraft=draft;
+        await persistAIDraft();
         renderAIDraft();
       }catch(failure){error(failure.message);}
       break;

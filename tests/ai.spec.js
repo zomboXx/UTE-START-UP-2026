@@ -2,16 +2,15 @@ import {test,expect} from '@playwright/test';
 
 test('AI errors move into view on a small phone and preserve the entered goal',async({page})=>{
   await page.setViewportSize({width:320,height:640});
-  await page.route('**/api/plans',route=>route.fulfill({status:401,json:{error:'Mã dùng thử đã thay đổi. Kiểm tra mã do nhóm Brain10 cung cấp.'}}));
+  await page.route('**/api/plans',route=>route.fulfill({status:401,json:{error:'Dịch vụ AI đang bận. Vui lòng thử lại sau.'}}));
   await page.goto('/try/');
   await page.getByText('Dùng hồ sơ mẫu An',{exact:true}).click();
   await page.getByRole('button',{name:'Lịch trình',exact:true}).click();
   await page.getByRole('button',{name:'Lên kế hoạch cùng AI ↗',exact:true}).click();
-  await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-expired');
   const goal=page.getByLabel('Bạn muốn đạt điều gì?',{exact:true});
   await goal.fill('Học nhảy cho buổi văn nghệ ngày 20/11');
   await page.getByRole('button',{name:'Tạo kế hoạch để xem trước',exact:true}).click();
-  await expect(page.locator('#ai-error')).toContainText('Mã dùng thử đã thay đổi');
+  await expect(page.locator('#ai-error')).toContainText('Dịch vụ AI đang bận');
   await expect(page.locator('#ai-error')).toBeInViewport();
   await expect(goal).toHaveValue('Học nhảy cho buổi văn nghệ ngày 20/11');
   await expect(page.locator('#ai-submit')).toBeEnabled();
@@ -20,6 +19,7 @@ test('AI errors move into view on a small phone and preserve the entered goal',a
 test('AI flow allows no fixed schedule, sends only planning context, previews before persisting',async({page})=>{
   let payload;
   await page.route('**/api/plans',async route=>{
+    if(route.request().method()==='GET')return route.fulfill({json:{quota:{limit:5,used:0,remaining:5,period:'2026-11'}}});
     payload=route.request().postDataJSON();
     const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
     const day=tomorrow.toISOString().slice(0,10),exam=new Date(tomorrow);exam.setDate(exam.getDate()+2);
@@ -35,7 +35,6 @@ test('AI flow allows no fixed schedule, sends only planning context, previews be
   await page.getByLabel('Tên lịch',{exact:true}).fill('Đi học');
   await page.getByRole('button',{name:'Lưu lịch cố định',exact:true}).click();
   await page.getByRole('button',{name:'Lên kế hoạch cùng AI ↗',exact:true}).click();
-  await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-code-not-a-provider-key');
   await page.getByLabel('Bạn muốn đạt điều gì?',{exact:true}).fill('DBMS sau 3 ngày');
   await page.getByLabel('Bạn đã biết gì, muốn tập thêm gì? (tùy chọn)',{exact:true}).fill('INNER JOIN, LEFT JOIN');
   await page.getByRole('button',{name:'Tạo kế hoạch để xem trước',exact:true}).click();
@@ -67,7 +66,6 @@ test('an AI gateway outage still lets the user schedule and save a free study sl
   await field('Kết thúc').fill('20:00');
   await button('Lưu lịch cố định').click();
   await button('Lên kế hoạch cùng AI ↗').click();
-  await field('Mã thử AI của nhóm').fill('test-beta');
   await field('Bạn muốn đạt điều gì?').fill('Ôn SQL JOIN');
   await button('Tạo kế hoạch để xem trước').click();
   await expect(page.locator('#ai-error')).toContainText('AI qua mạng đang tạm gián đoạn');
@@ -82,7 +80,7 @@ test('an AI gateway outage still lets the user schedule and save a free study sl
   await page.reload();
   const [session]=await getPlan();
   expect(session).toMatchObject({source:'automatic',day:'2026-11-16',title:'Ôn SQL JOIN',start:1200,duration:45});
-  expect(calls).toEqual(['POST']);
+  expect(calls.filter(method=>method==='POST')).toEqual(['POST']);
 });
 
 test('off-topic AI requests explain the scope and return to editing without saving',async({page})=>{
@@ -96,7 +94,6 @@ test('off-topic AI requests explain the scope and return to editing without savi
   await page.getByLabel('Tên lịch',{exact:true}).fill('Lớp tối');
   await button('Lưu lịch cố định').click();
   await button('Lên kế hoạch cùng AI ↗').click();
-  await page.getByLabel('Mã thử AI của nhóm',{exact:true}).fill('test-beta');
   const goal=page.getByRole('textbox',{name:'Bạn muốn đạt điều gì?',exact:true});
   await goal.fill('Trận tiếp theo của ĐTQG Việt Nam là khi nào?');
   await button('Tạo kế hoạch để xem trước').click();
