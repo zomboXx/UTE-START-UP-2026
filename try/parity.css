@@ -5,3 +5,5 @@
 
 .welcome-symbol,.mobile-welcome .card,.account-options,.mobile-welcome>button{flex-shrink:0}.app-title strong{font-size:20px;letter-spacing:-.8px}.screen-body>.row.between>div{min-width:0;flex:1}
 @media(max-width:480px){.web-header,.device-controls{display:none}.app-device{height:100dvh;max-height:none}.app-device:not(.launcher-mode) .system-home{display:none}}
+
+.toast.actionable{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.undo-schedule{color:#b9d3ff;font-weight:700;padding:8px;white-space:nowrap}
