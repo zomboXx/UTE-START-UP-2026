@@ -57,3 +57,16 @@ test('failed edits keep original data and a record deleted in another tab is not
  await page.getByLabel('Bạn muốn làm gì?',{exact:true}).fill('Không được hồi sinh');await button(page,'Lưu thay đổi').click();
  await expect(page.locator('#form-error')).toContainText('đã bị xóa');expect((await state(page)).tasks.some(t=>t.id===original.id)).toBe(false);
 });
+
+test('a task moved to another date can be found again and new tasks use that chosen date',async({page})=>{
+ await page.setViewportSize({width:320,height:700});await start(page);
+ const target=new Date(Date.now()+10*86400000).toISOString().slice(0,10);
+ await button(page,'Đọc 10 trang sách').click();await page.getByLabel('Ngày thực hiện',{exact:true}).fill(target);
+ await button(page,'Lưu thay đổi').click();await expect(page.getByRole('dialog')).not.toBeVisible();
+ await expect(page.locator('#screen .task-row')).toContainText('Đọc 10 trang sách');
+ await page.reload();await page.getByLabel('Chọn ngày công việc',{exact:true}).fill(target);
+ await expect(page.locator('#screen .task-row')).toContainText('Đọc 10 trang sách');
+ await button(page,'Thêm').click();await page.getByLabel('Bạn muốn làm gì?',{exact:true}).fill('Việc cho ngày đã chọn');
+ await button(page,'Thêm vào danh sách').click();await expect(page.getByRole('dialog')).not.toBeVisible();
+ expect((await state(page)).tasks.find(t=>t.title==='Việc cho ngày đã chọn').day).toBe(target);
+});

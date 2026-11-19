@@ -4,7 +4,7 @@ Phạm vi: chỉnh công việc thủ công và hoạt động tự ghi; đọc 
 
 ## Thử trên web
 
-1. Hôm nay: bấm tên công việc để sửa tên, thời lượng, ghi chú hoặc ngày. Nút “Sửa / dời / xóa” mở các thao tác, gồm dời sang hôm nay/ngày mai hoặc chọn ngày khác. Việc đã hoàn thành vẫn sửa được tên và ghi chú, giữ nguyên ngày và check-out. Việc đang gắn với phiên tập trung cần kết thúc phiên trước khi dời hoặc xóa; đổi tên không đổi bộ đếm.
+1. Hôm nay: bấm tên công việc để sửa tên, thời lượng, ghi chú hoặc ngày. Nút “Sửa / dời / xóa” mở các thao tác, gồm dời sang hôm nay/ngày mai hoặc chọn ngày khác. Có bộ chọn ngày ở Hôm nay để tìm lại công việc đã dời sang ngày xa hơn; tạo việc mới cũng dùng đúng ngày đang chọn. Việc đã hoàn thành vẫn sửa được tên và ghi chú, giữ nguyên ngày và check-out. Việc đang gắn với phiên tập trung cần kết thúc phiên trước khi dời hoặc xóa; đổi tên không đổi bộ đếm.
 2. “Những điều đã làm” hiển thị hai hoạt động mới nhất. Chọn “Xem tất cả” để mở nhật ký, tìm theo tên/ghi chú và lọc ngày. Có cùng đường vào nhật ký ở Thống kê.
 3. Chọn chi tiết một hoạt động để xem đủ nội dung/ảnh, sửa hoặc xóa. Bản ghi cũ hơn 24 giờ vẫn đọc và chỉnh được. Hoạt động thêm mới tiếp tục phải nằm trong 24 giờ vừa qua. Giữ nguyên giây/mili giây cũ nếu không sửa trường thời gian.
 4. Xóa yêu cầu xác nhận rồi cho hoàn tác trong 10 giây. Khi lưu thất bại, giữ dữ liệu cũ và nội dung biểu mẫu. Không khôi phục nhầm bản ghi đã bị xóa ở tab khác.
