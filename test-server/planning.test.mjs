@@ -38,7 +38,7 @@ test('public beta rejects missing/invalid credentials and foreign origins withou
   const approved=await preflight(pagesOrigin);
   assert.equal(approved.status,204);
   assert.equal(approved.headers.get('access-control-allow-origin'),pagesOrigin);
-  assert.equal(approved.headers.get('access-control-allow-headers'),'Authorization, Content-Type');
+  assert.equal(approved.headers.get('access-control-allow-headers'),'Authorization, Content-Type, X-Brain10-Request-Id');
   const rejected=await preflight('https://foreign.example');
   assert.equal(rejected.headers.get('access-control-allow-origin'),null);
   assert.equal((await post()).status,401);
@@ -84,6 +84,6 @@ test('out-of-scope and clarification responses cannot echo unrelated questions o
 test('no server secret means fail closed; provider failure never becomes a draft',async t=>{
   const server=createServer(createPlanHandler({key:()=>' \n'}));await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>server.close());
   const url=`http://127.0.0.1:${server.address().port}`;
-  assert.deepEqual(await (await fetch(url)).json(),{configured:false,accessRequired:true,model:process.env.POOL_MODEL || 'gpt-5.6-sol',planningVersion:2});
+  assert.deepEqual(await (await fetch(url)).json(),{configured:false,accessRequired:false,starterLimit:5,quotaPublicKey:null,model:process.env.POOL_MODEL || 'gpt-5.6-sol',planningVersion:3});
   assert.equal((await fetch(url,{method:'POST',body:'{}'})).status,503);
 });
