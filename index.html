@@ -453,7 +453,16 @@
     </div>
   </aside>
   <script src="mascot.js" defer></script>
-  <script src="feedback.js?v=8" defer></script>
+  <script src="feedback.js?v=9" defer></script>
+<details id="analytics-choice" style="margin:1rem auto;padding:.75rem 1rem;max-width:65rem">
+    <summary>Tùy chọn thống kê truy cập</summary>
+    <p>Nếu đồng ý, Brain10 ghi mã phiên ngẫu nhiên, thời gian hoạt động trên bản thử và thao tác xem bản Android hoặc
+      bấm tải. Có thể tắt bất cứ lúc nào. Dữ liệu sự kiện được giữ tối đa khoảng 90 ngày khi dịch vụ hoạt động.</p>
+    <button type="button" data-allow>Cho phép thống kê</button>
+    <button type="button" data-deny>Từ chối</button>
+  </details>
+  <script src="analytics.js" data-endpoint="https://featuring-cats-summer-based.trycloudflare.com/api/web-events"
+    data-page="intro" defer></script>
 </body>
 
 </html>
