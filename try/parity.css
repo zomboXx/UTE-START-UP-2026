@@ -7,3 +7,5 @@
 @media(max-width:480px){.web-header,.device-controls{display:none}.app-device{height:100dvh;max-height:none}.app-device:not(.launcher-mode) .system-home{display:none}}
 
 .toast.actionable{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.undo-schedule{color:#b9d3ff;font-weight:700;padding:8px;white-space:nowrap}
+
+.record-title{text-align:left;font:inherit;font-weight:inherit;padding:0;color:inherit;overflow-wrap:anywhere}.record-title:hover{text-decoration:underline}.record-options{font-size:13px;color:var(--blue);padding:8px 0}.record-actions{display:grid;gap:12px}.record-footer{display:flex;gap:20px;flex-wrap:wrap}.record-footer .text-button,.record-actions .text-button{font-size:14px}.activity-record h3{margin:12px 0 6px;font-size:17px}.activity-record .record-note{white-space:pre-wrap;overflow-wrap:anywhere;max-height:5em;overflow:hidden}.record-note{font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.danger-text{color:#b3261e}#activity-history .field{font-size:14px}#activity-history input{font-size:16px}

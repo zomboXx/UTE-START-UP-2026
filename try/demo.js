@@ -1,3 +1,4 @@
+import {taskChanges,activityChanges,activityHistory} from './record-model.js?v=journal-1';
 import {weekSummary,circleStreak} from './parity-model.js?v=0.6.7';
 import {defaultPreferences,makePlanningRequest,makeAutomaticDraft,convertDraft,validateAcceptance} from './planning.js?v=4';
 import {reminderBoundary} from './wellbeing.js';
@@ -44,6 +45,7 @@ try {
 } catch { storageAvailable = false; }
 let welcomeStep=state.profile.name && state.profile.birthday ? 1 : 0, selectedCircle=0, statsStart=weekStart(dateKey());
 let activityPhoto=null, photoBusy=false, photoRequest=0;
+let activityOrigin=null,historyFilter={search:'',date:''};
 let baseline = structuredClone(state), dirty = false, writing = null;
 let tab = 0, selectedDay = 0, duration = 30, preview = [], timerNotice = null;
 let displayedDay = dateKey();
@@ -66,9 +68,10 @@ function adoptState(latest) {
   const previousDraft=baseline.planningDraft;
   baseline = structuredClone(latest);
   state = latest;
-  if (reset) {aiDraft=null;aiSessions=[];modal.close();}
+  if (reset) {aiDraft=null;aiSessions=[];undoEntry=null;clearTimeout(undoTimer);modal.close();}
   else if(!aiBusy && !sameState(previousDraft,latest.planningDraft)){aiDraft=latest.planningDraft?.result ?? null;aiSessions=latest.planningDraft?.sessions ?? [];}
   if (changed && (reset || !screen.querySelector('#welcome-form:focus-within'))) render();
+  if(modal.querySelector('#history-list'))renderHistoryRows();
 }
 function save() {
   dirty = true;
@@ -106,11 +109,11 @@ window.addEventListener('storage', event => {
 function toast(message) { const el = document.getElementById('toast'); el.replaceChildren(document.createTextNode(message)); el.classList.remove('actionable'); el.classList.add('visible'); clearTimeout(timerNotice); timerNotice = setTimeout(() => el.classList.remove('visible'),4500); }
 async function removeSchedule(collection,id){
   const index=state[collection].findIndex(entry=>entry.id===id);if(index<0)return;
-  const entry=structuredClone(state[collection][index]);state[collection].splice(index,1);
-  if(!await save()){state[collection].splice(index,0,entry);render();return;}
+  const entry=structuredClone(state[collection][index]),generation=state.generation;state[collection].splice(index,1);
+  if(!await save()){if(state.generation===generation)state[collection].splice(Math.min(index,state[collection].length),0,entry);render();return;}
   modal.close();render();
-  undoEntry={collection,index,entry};clearTimeout(undoTimer);
-  const el=document.getElementById('toast');toast(collection==='commitments'?'Đã xóa lịch lặp hằng tuần.':'Đã bỏ buổi học khỏi lịch.');
+  undoEntry={collection,index,entry,generation:state.generation};clearTimeout(undoTimer);
+  const el=document.getElementById('toast');toast(({commitments:'Đã xóa lịch lặp hằng tuần.',plan:'Đã bỏ buổi học khỏi lịch.',tasks:'Đã xóa công việc.',activities:'Đã xóa hoạt động.'})[collection]);
   clearTimeout(timerNotice);el.classList.add('actionable');
   const button=document.createElement('button');button.textContent='Hoàn tác';button.className='undo-schedule';button.dataset.action='undo-schedule';el.append(button);
   undoTimer=setTimeout(()=>{undoEntry=null;el.classList.remove('visible','actionable');},10000);
@@ -231,7 +234,7 @@ function taskRow(task, {overdue = false} = {}) {
   const start = overdue ? dayLabel(task.day) : task.start!=null ? timeText(task.start) : 'Linh hoạt';
   const move = overdue && state.tasks.includes(task)
     ? `<button class="text-button" data-action="move-task-today" data-id="${esc(task.id)}">Dời sang hôm nay</button>` : '';
-  return `<article class="task-row ${task.done?'completed':''}"><button class="check-button ${task.done?'done':''}" data-action="checkout" data-id="${esc(task.id)}" aria-label="${task.done?'Xem kết quả':'Hoàn thành'} ${esc(task.title)}">${task.done?icon('check'):''}</button><div class="flex"><div class="row between"><span class="tag">${task.done?'Đã hoàn thành':planned?(task.source==='ai'?'Phiên học AI':'Phiên học mẫu'):'Việc của bạn'}</span><span class="task-time">${start}</span></div><h3>${esc(task.title)}</h3>${task.note?`<p>${esc(task.note)}</p>`:''}<div class="task-bottom"><span class="row" style="gap:3px">${icon('clock')} ${task.duration} phút</span>${!task.done?`<button class="mini-button" data-action="checkout" data-id="${esc(task.id)}">${icon('check')} Check-out</button>`:''}</div>${move}</div></article>`;
+  return `<article class="task-row ${task.done?'completed':''}"><button class="check-button ${task.done?'done':''}" data-action="checkout" data-id="${esc(task.id)}" aria-label="${task.done?'Xem kết quả':'Hoàn thành'} ${esc(task.title)}">${task.done?icon('check'):''}</button><div class="flex"><div class="row between"><span class="tag">${task.done?'Đã hoàn thành':planned?(task.source==='ai'?'Phiên học AI':'Phiên học mẫu'):'Việc của bạn'}</span><span class="task-time">${start}</span></div><h3>${state.tasks.some(item=>item.id===task.id)?`<button class="record-title" data-action="edit-task" data-id="${esc(task.id)}">${esc(task.title)}</button>`:esc(task.title)}</h3>${task.note?`<p>${esc(task.note)}</p>`:''}<div class="task-bottom"><span class="row" style="gap:3px">${icon('clock')} ${task.duration} phút</span>${!task.done?`<button class="mini-button" data-action="checkout" data-id="${esc(task.id)}">${icon('check')} Check-out</button>`:''}</div>${move}${state.tasks.some(item=>item.id===task.id)?`<button class="record-options" data-action="task-options" data-id="${esc(task.id)}" aria-label="Tùy chọn việc ${esc(task.title)}">Sửa / dời / xóa</button>`:''}</div></article>`;
 }
 
 function providerLogo(provider) {
@@ -245,7 +248,7 @@ async function startGuest(){state.ready=true;await save();modal.close();render(t
 function statsDay(date){
   const day=weekSummary(state,statsStart).find(item=>item.date===date);if(!day || day.future)return;
   const clock=value=>new Date(value).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
-  showModal(`${dayLabel(date)}/${date.slice(0,4)}`,`<span class="tag">Hoạt động đã lưu trong trình duyệt</span><div class="metric-row"><div><strong>${day.tasks.length}</strong><small>Việc hoàn thành</small></div><div><strong>${Math.floor(day.focusSeconds/60)} phút</strong><small>Tập trung</small></div></div><h3>Việc đã hoàn thành</h3>${day.tasks.length?day.tasks.map(item=>`<button class="day-entry" data-action="checkout" data-id="${esc(item.id)}">${icon('check')}<span>${esc(item.title)}<small>${esc(item.reflection || 'Đã hoàn thành')}</small></span>${icon('arrow')}</button>`).join(''):'<p class="modal-copy">Chưa có việc hoàn thành trong ngày này.</p>'}<h3>Hoạt động bạn đã ghi</h3>${day.activities.length?day.activities.map(item=>`<article class="day-entry"><div>${icon('leaf')}</div><div><strong>${esc(item.title)}</strong><small>${clock(item.start)}–${clock(item.end)} · ${item.duration} phút</small>${item.photo?`<img class="activity-photo" alt="Ảnh minh chứng hoạt động" src="${esc(item.photo)}">`:''}</div></article>`).join(''):'<p class="modal-copy">Chưa có hoạt động tự ghi.</p>'}<h3>Các phiên tập trung</h3>${day.sessions.length?day.sessions.map(item=>`<p class="notice">${item.start?clock(item.start)+' · ':''}${Math.floor(item.seconds/60)} phút${item.early?' · Kết thúc sớm':''}</p>`).join(''):'<p class="modal-copy">Chưa có phiên đã kết thúc.</p>'}`);
+  showModal(`${dayLabel(date)}/${date.slice(0,4)}`,`<span class="tag">Hoạt động đã lưu trong trình duyệt</span><div class="metric-row"><div><strong>${day.tasks.length}</strong><small>Việc hoàn thành</small></div><div><strong>${Math.floor(day.focusSeconds/60)} phút</strong><small>Tập trung</small></div></div><h3>Việc đã hoàn thành</h3>${day.tasks.length?day.tasks.map(item=>`<button class="day-entry" data-action="checkout" data-id="${esc(item.id)}">${icon('check')}<span>${esc(item.title)}<small>${esc(item.reflection || 'Đã hoàn thành')}</small></span>${icon('arrow')}</button>`).join(''):'<p class="modal-copy">Chưa có việc hoàn thành trong ngày này.</p>'}<h3>Hoạt động bạn đã ghi</h3><button class="text-button" data-action="activity-history">Xem tất cả hoạt động</button>${day.activities.length?day.activities.map(item=>`<article class="day-entry"><div>${icon('leaf')}</div><div><strong><button class="record-title" data-action="activity-detail" data-id="${esc(item.id)}" data-from="${date}">${esc(item.title)}</button></strong><small>${clock(item.start)}–${clock(item.end)} · ${item.duration} phút</small>${item.photo?`<img class="activity-photo" alt="Ảnh minh chứng hoạt động" src="${esc(item.photo)}">`:''}</div></article>`).join(''):'<p class="modal-copy">Chưa có hoạt động tự ghi.</p>'}<h3>Các phiên tập trung</h3>${day.sessions.length?day.sessions.map(item=>`<p class="notice">${item.start?clock(item.start)+' · ':''}${Math.floor(item.seconds/60)} phút${item.early?' · Kết thúc sớm':''}</p>`).join(''):'<p class="modal-copy">Chưa có phiên đã kết thúc.</p>'}`);
 }
 function currentCircle(){return state.circles[selectedCircle] || state.circles[0];}
 async function markCheckin(rest){const circle=currentCircle();if(!circle)return;const date=dateKey(),id=`${circle.id}:${date}`;state.checkins=state.checkins.filter(item=>item.id!==id);state.checkins.push({id,circleId:circle.id,date,rest,at:new Date().toISOString()});const saved=await save();render();if(saved)toast(rest?'Đã ghi nhận ngày nghỉ. Bạn có thể trở lại khi sẵn sàng.':'Đã ghi nhận cam kết hôm nay.');}
@@ -260,7 +263,7 @@ function renderHome() {
   const percentage = entries.length ? Math.round(done/entries.length*100) : 0;
   const name = state.profile.name.trim().split(/\s+/).at(-1) || 'bạn';
   const greeting = new Date().getHours()<12?'Chào buổi sáng':new Date().getHours()<18?'Chào buổi chiều':'Chào buổi tối';
-  screen.innerHTML = `<div class="screen-body grow"><h1 class="screen-title">${greeting}, ${esc(name)}</h1><p class="screen-subtitle">${!entries.length?'Một ngày có chủ đích. Bắt đầu bằng một việc nhỏ.':done===entries.length?'Bạn đã hoàn thành những điều quan trọng. Nghỉ một chút nhé.':`Còn ${entries.length-done} việc cần làm. Cứ từng bước, theo nhịp của bạn.`}</p><div class="card row"><div class="ring" style="--progress:${percentage}%"><span>${percentage}%</span></div><div class="flex"><strong class="small">Nhịp ngày</strong><p class="tiny muted">${done} / ${entries.length} việc đã hoàn thành</p></div><button class="round-add" data-action="activity" aria-label="Ghi hoạt động">${icon('plus')}</button></div><div class="section-row"><h2>${selectedDay?'Việc ngày mai':'Việc hôm nay'}</h2><time>${dayLabel(day)}</time><button class="text-add" data-action="add-task">${icon('plus')} Thêm</button></div><div class="chips"><button class="chip ${!selectedDay?'selected':''}" data-action="day" data-day="0">Hôm nay</button><button class="chip ${selectedDay?'selected':''}" data-action="day" data-day="1">Ngày mai</button></div>${entries.length?`<div class="card task-list">${entries.map(taskRow).join('')}</div>`:`<div class="card empty">${icon('sun')}<h3>Chừa chỗ cho điều quan trọng.</h3><p>Chọn 2–3 việc bạn muốn hoàn thành.<br>Lịch đã xác nhận cũng sẽ có mặt ở đây.</p><button class="text-button" data-action="add-task">Thêm việc đầu tiên</button></div>`}${state.activities.length?`<div class="section-row"><h2>Những điều đã làm</h2></div>${state.activities.slice().reverse().map(a=>`<div class="card"><span class="tag">Tự ghi nhận · Chỉ mình tôi</span><h3 class="small" style="margin:9px 0 4px">${esc(a.title)}</h3><p class="tiny muted">${dayLabel(dateKey(new Date(a.end)))} · ${a.duration} phút</p></div>`).join('')}`:''}</div><div class="quick-add"><button data-action="add-task">${icon('spark')} Ghi nhanh điều cần làm…</button><button class="mic-button" data-action="voice" aria-label="Thêm bằng giọng nói">${icon('mic')}</button></div>`;
+  screen.innerHTML = `<div class="screen-body grow"><h1 class="screen-title">${greeting}, ${esc(name)}</h1><p class="screen-subtitle">${!entries.length?'Một ngày có chủ đích. Bắt đầu bằng một việc nhỏ.':done===entries.length?'Bạn đã hoàn thành những điều quan trọng. Nghỉ một chút nhé.':`Còn ${entries.length-done} việc cần làm. Cứ từng bước, theo nhịp của bạn.`}</p><div class="card row"><div class="ring" style="--progress:${percentage}%"><span>${percentage}%</span></div><div class="flex"><strong class="small">Nhịp ngày</strong><p class="tiny muted">${done} / ${entries.length} việc đã hoàn thành</p></div><button class="round-add" data-action="activity" aria-label="Ghi hoạt động">${icon('plus')}</button></div><div class="section-row"><h2>${selectedDay?'Việc ngày mai':'Việc hôm nay'}</h2><time>${dayLabel(day)}</time><button class="text-add" data-action="add-task">${icon('plus')} Thêm</button></div><div class="chips"><button class="chip ${!selectedDay?'selected':''}" data-action="day" data-day="0">Hôm nay</button><button class="chip ${selectedDay?'selected':''}" data-action="day" data-day="1">Ngày mai</button></div>${entries.length?`<div class="card task-list">${entries.map(taskRow).join('')}</div>`:`<div class="card empty">${icon('sun')}<h3>Chừa chỗ cho điều quan trọng.</h3><p>Chọn 2–3 việc bạn muốn hoàn thành.<br>Lịch đã xác nhận cũng sẽ có mặt ở đây.</p><button class="text-button" data-action="add-task">Thêm việc đầu tiên</button></div>`}${state.activities.length?`<div class="section-row"><h2>Những điều đã làm</h2><button class="text-button" data-action="activity-history">Xem tất cả (${state.activities.length})</button></div>${activityHistory(state.activities).slice(0,2).map(a=>activityRow(a)).join('')}`:''}</div><div class="quick-add"><button data-action="add-task">${icon('spark')} Ghi nhanh điều cần làm…</button><button class="mic-button" data-action="voice" aria-label="Thêm bằng giọng nói">${icon('mic')}</button></div>`;
   const overdue = selectedDay === 0 ? overdueWork(day) : [];
   if (overdue.length) {
     screen.querySelector('.task-list, .empty').insertAdjacentHTML('afterend',
@@ -285,9 +288,41 @@ function startSpeech(){
 function audienceLabel(value){return ({private:'Chỉ mình tôi',group:'Toàn bộ nhóm',selected:'Chọn người'})[value] || value || 'Chỉ mình tôi';}
 function recipientChoices(){const members=[...new Map(state.circles.flatMap(circle=>circle.members).map(member=>[member.id,member])).values()];return members.length?members.map(member=>`<label class="recipient-choice"><input type="checkbox" name="recipients" value="${esc(member.id)}">${esc(member.name)}</label>`).join(''):'<p class="field-hint">Thêm bạn đồng hành trong tab Nhóm để chọn người xem.</p>';}
 
-function addTask() {
-  showModal('Việc bạn muốn làm',`<form id="task-form"><label class="field">Bạn muốn làm gì?<input name="title" maxlength="140" placeholder="VD: Đọc 10 trang sách" required autofocus></label><div class="field-grid"><label class="field">Thời lượng (phút)<input name="duration" type="number" min="1" max="480" value="30" required></label><label class="field">Ngày thực hiện<select name="day"><option value="0" ${!selectedDay?'selected':''}>Hôm nay</option><option value="1" ${selectedDay?'selected':''}>Ngày mai</option></select></label></div><label class="field">Ghi chú (tùy chọn)<textarea name="note" maxlength="300" placeholder="Một bước cụ thể để bắt đầu…"></textarea></label><button class="button full">Thêm vào danh sách</button></form>`);
+function addTask(id=null) {
+  const item=typeof id==='string'?state.tasks.find(t=>t.id===id):null;
+  if(typeof id==='string'&&!item){toast('Công việc này đã bị xóa.');return;}
+  showModal(item?'Sửa công việc':'Việc bạn muốn làm',`<form id="task-form"><input type="hidden" name="id" value="${esc(item?.id || '')}"><label class="field">Bạn muốn làm gì?<input name="title" value="${esc(item?.title || '')}" maxlength="140" placeholder="VD: Đọc 10 trang sách" required autofocus></label><div class="field-grid"><label class="field">Thời lượng (phút)<input name="duration" type="number" min="1" max="480" value="${item?.duration ?? 30}" required></label><label class="field">Ngày thực hiện${item?`<input type="date" name="date" value="${esc(item.day)}" required ${item.done?'readonly':''}>`:`<select name="day"><option value="0" ${!selectedDay?'selected':''}>Hôm nay</option><option value="1" ${selectedDay?'selected':''}>Ngày mai</option></select>`}</label></div>${item?.done?'<p class="field-hint">Việc đã hoàn thành giữ nguyên ngày thực hiện và kết quả check-out.</p>':''}<label class="field">Ghi chú (tùy chọn)<textarea name="note" maxlength="1000" placeholder="Một bước cụ thể để bắt đầu…">${esc(item?.note || '')}</textarea></label><p id="form-error" class="form-error" role="alert"></p><button class="button full">${item?'Lưu thay đổi':'Thêm vào danh sách'}</button></form>`);
 }
+function taskOptions(id){
+  const item=state.tasks.find(t=>t.id===id);if(!item)return;
+  showModal(item.title,`<div class="record-actions"><button class="button full" data-action="edit-task" data-id="${esc(id)}">Sửa công việc</button>${!item.done?`<button class="button secondary full" data-action="move-task" data-id="${esc(id)}" data-day="${dateKey()}">Dời sang hôm nay</button><button class="button secondary full" data-action="move-task" data-id="${esc(id)}" data-day="${dateKey(dateOffset(1))}">Dời sang ngày mai</button><button class="text-button" data-action="edit-task" data-id="${esc(id)}">Chọn ngày khác</button>`:''}<button class="text-button danger-text" data-action="delete-record" data-collection="tasks" data-id="${esc(id)}">Xóa công việc</button></div>`);
+}
+function focusUses(id){return state.focus?.taskId===id&&state.focus.end>Date.now();}
+async function updateLocalRecord(collection,id,patch){
+  const item=state[collection].find(r=>r.id===id);if(!item)throw new Error('Bản ghi này đã bị xóa ở nơi khác. Đóng rồi mở lại danh sách.');
+  const before=structuredClone(item),generation=state.generation;
+  Object.assign(item,patch);
+  const saved=await save();
+  if(!saved){
+    if(state.generation===generation){const current=state[collection].find(r=>r.id===id);if(current){for(const key of Object.keys(current))delete current[key];Object.assign(current,before);}}
+    render();throw new Error('Chưa lưu được thay đổi. Nội dung cũ vẫn được giữ. Hãy thử lại.');
+  }
+  if(!state[collection].some(r=>r.id===id))throw new Error('Bản ghi này đã bị xóa ở tab khác.');
+}
+async function moveTask(id,day){
+  const item=state.tasks.find(t=>t.id===id);if(!item)return;
+  if(item.done){toast('Việc đã hoàn thành giữ nguyên ngày thực hiện.');return;}
+  if(focusUses(id)){showModal('Phiên tập trung đang chạy','<p class="modal-copy">Kết thúc phiên gắn với công việc này trước khi dời ngày hoặc xóa. Bộ đếm hiện tại được giữ nguyên.</p>');return;}
+  try{await updateLocalRecord('tasks',id,{day:taskChanges(item,{...item,day}).day});modal.close();render();toast('Đã dời công việc sang '+dayLabel(day)+'.');}catch(e){toast(e.message);}
+}
+function confirmDeleteRecord(collection,id){
+  if(!['tasks','activities'].includes(collection))return;
+  const item=state[collection].find(r=>r.id===id);if(!item)return;
+  if(collection==='tasks'&&focusUses(id)){showModal('Phiên tập trung đang chạy','<p class="modal-copy">Kết thúc phiên gắn với công việc này trước khi xóa.</p>');return;}
+  const noun=collection==='tasks'?'công việc':'hoạt động';
+  showModal('Xóa '+noun+'?',`<p class="modal-copy">${esc(item.title)} sẽ được bỏ khỏi danh sách và thống kê tương ứng. Bạn có thể hoàn tác trong 10 giây sau khi xóa.</p><button class="button full" data-action="confirm-delete-record" data-collection="${collection}" data-id="${esc(id)}">Xóa ${noun}</button><button class="text-button full" data-action="close">Giữ lại</button>`);
+}
+
 function checkout(id) {
   const task = [...state.tasks,...state.plan].find(t=>t.id===id); if (!task) return;
   if (task.done) {
@@ -600,7 +635,7 @@ async function finishFocus(early) {
 }
 function renderStats() {
   const days=weekSummary(state,statsStart),done=days.reduce((sum,day)=>sum+day.tasks.length,0),max=Math.max(1,...days.map(day=>day.tasks.length)),current=weekStart(dateKey()),last=days.at(-1).date;
-  screen.innerHTML=`<div class="screen-body"><h1 class="screen-title">Thời gian của bạn</h1><p class="screen-subtitle">Chọn một tuần. Chạm vào từng ngày để nhìn lại việc hoàn thành và hoạt động.</p><div class="calendar-navigation stats-navigation"><button class="icon-button" data-action="stats-prev" aria-label="Tuần thống kê trước">‹</button><div><strong>${dayLabel(statsStart)} – ${dayLabel(last)}/${last.slice(0,4)}</strong>${statsStart!==current?'<button class="text-button" data-action="stats-today">Về tuần này</button>':''}</div><button class="icon-button" data-action="stats-next" aria-label="Tuần thống kê sau" ${statsStart>=current?'disabled':''}>›</button></div><section class="card"><span class="tag">CÔNG VIỆC TRONG TUẦN</span><div class="stat-value">${done} <span class="small muted">việc hoàn thành</span></div><div class="chart" aria-label="Việc hoàn thành theo ngày">${days.map(day=>`<button class="bar-item" data-action="stats-day" data-day="${day.date}" aria-label="Xem ngày ${dayLabel(day.date)}: ${day.tasks.length} việc" ${day.future?'disabled':''}><span>${day.future?'—':day.tasks.length}</span><div class="bar ${day.date===dateKey()?'current':''}" style="height:${Math.max(3,day.tasks.length/max*85)}px"></div><span>${day.date.slice(-2)}</span></button>`).join('')}</div><p class="tiny muted">Chạm một cột để xem ngày đó. Dữ liệu từ các thao tác bạn lưu trên trình duyệt này.</p></section><section class="card"><h2>Những khoảng dành cho bạn</h2><div class="metric-row"><div><strong>${Math.floor(days.reduce((sum,day)=>sum+day.focusSeconds,0)/60)}p</strong><small>Tập trung đã ghi nhận</small></div><div><strong>${days.reduce((sum,day)=>sum+day.activities.length,0)}</strong><small>Hoạt động tự ghi</small></div></div></section><section class="card platform-card"><div class="row">${icon('chart')}<h2>Thời gian sử dụng ứng dụng</h2></div><p class="small muted">Thống kê TikTok, YouTube và các app khác cần quyền sử dụng trên Android. Trình duyệt chỉ xem được dữ liệu Brain10 bạn lưu tại đây.</p><a class="button secondary full" href="../#download">Mở trang tải Android</a></section></div>`;
+  screen.innerHTML=`<div class="screen-body"><h1 class="screen-title">Thời gian của bạn</h1><p class="screen-subtitle">Chọn một tuần. Chạm vào từng ngày để nhìn lại việc hoàn thành và hoạt động.</p><div class="calendar-navigation stats-navigation"><button class="icon-button" data-action="stats-prev" aria-label="Tuần thống kê trước">‹</button><div><strong>${dayLabel(statsStart)} – ${dayLabel(last)}/${last.slice(0,4)}</strong>${statsStart!==current?'<button class="text-button" data-action="stats-today">Về tuần này</button>':''}</div><button class="icon-button" data-action="stats-next" aria-label="Tuần thống kê sau" ${statsStart>=current?'disabled':''}>›</button></div><section class="card"><span class="tag">CÔNG VIỆC TRONG TUẦN</span><div class="stat-value">${done} <span class="small muted">việc hoàn thành</span></div><div class="chart" aria-label="Việc hoàn thành theo ngày">${days.map(day=>`<button class="bar-item" data-action="stats-day" data-day="${day.date}" aria-label="Xem ngày ${dayLabel(day.date)}: ${day.tasks.length} việc" ${day.future?'disabled':''}><span>${day.future?'—':day.tasks.length}</span><div class="bar ${day.date===dateKey()?'current':''}" style="height:${Math.max(3,day.tasks.length/max*85)}px"></div><span>${day.date.slice(-2)}</span></button>`).join('')}</div><p class="tiny muted">Chạm một cột để xem ngày đó. Dữ liệu từ các thao tác bạn lưu trên trình duyệt này.</p></section><section class="card"><h2>Những khoảng dành cho bạn</h2><div class="metric-row"><div><strong>${Math.floor(days.reduce((sum,day)=>sum+day.focusSeconds,0)/60)}p</strong><small>Tập trung đã ghi nhận</small></div><div><strong>${days.reduce((sum,day)=>sum+day.activities.length,0)}</strong><small>Hoạt động tự ghi</small></div></div></section><section class="card"><h2>Nhật ký của bạn</h2><p class="modal-copy">Xem và chỉnh mọi hoạt động đã ghi, không cần quyền theo dõi ứng dụng.</p><button class="button secondary full" data-action="activity-history">Xem tất cả hoạt động (${state.activities.length})</button></section><section class="card platform-card"><div class="row">${icon('chart')}<h2>Thời gian sử dụng ứng dụng</h2></div><p class="small muted">Thống kê TikTok, YouTube và các app khác cần quyền sử dụng trên Android. Trình duyệt chỉ xem được dữ liệu Brain10 bạn lưu tại đây.</p><a class="button secondary full" href="../#download">Mở trang tải Android</a></section></div>`;
 }
 function renderGroups() {
   const circle=currentCircle(),today=dateKey(),checked=circle?state.checkins.find(item=>item.circleId===circle.id && item.date===today):null;
@@ -608,11 +643,35 @@ function renderGroups() {
   const shared=[...state.tasks,...state.plan].filter(item=>item.done && (item.audience==='Toàn bộ nhóm · mô phỏng' || item.audience==='group' || item.audience==='Toàn bộ nhóm' || item.audience==='selected' && (item.recipients || []).some(id=>circle?.members.some(member=>member.id===id))));
   screen.innerHTML=`<div class="screen-body"><div class="row between"><div><h1 class="screen-title">Cùng nhau giữ nhịp.</h1><p class="screen-subtitle">Một cam kết nhỏ. Những người bạn đồng hành.</p></div><button class="icon-button" data-action="create-circle" aria-label="Tạo nhóm">${icon('plus')}</button></div>${state.circles.length>1?`<div class="chips">${state.circles.map((item,index)=>`<button class="chip ${item.id===circle.id?'selected':''}" data-action="select-circle" data-index="${index}">${esc(item.name)}</button>`).join('')}</div>`:''}${circle?`<section class="card"><span class="tag">CAM KẾT CHUNG</span><h2>${esc(circle.name)}</h2><p class="modal-copy">${esc(circle.goal)}</p><div class="goal-progress"><span style="width:${total?done/total*100:0}%"></span></div><div class="metric-row"><div><strong>${done}/${total}</strong><small>Việc hôm nay</small></div><div><strong>${circleStreak(state.checkins,circle.id,today)}</strong><small>Ngày giữ nhịp</small></div><div><strong>${circle.members.length+1}</strong><small>Người đồng hành</small></div></div><p class="tiny blue">${checked?(checked.rest?'Hôm nay bạn chọn nghỉ.':'Bạn đã check-in hôm nay'):'Một bước nhỏ để giữ lời với chính mình.'}</p><button class="button full" data-action="checkin" ${checked&&!checked.rest?'disabled':''}>${checked&&!checked.rest?'Đã giữ cam kết hôm nay':'Tôi đã giữ cam kết'}</button><button class="text-button full" data-action="rest">Hôm nay tôi cần nghỉ</button></section><div class="section-row"><h2>Những người đồng hành</h2></div><section class="card">${[{name:state.profile.name},...circle.members].map((member,index)=>`<div class="row member"><div class="avatar">${esc(member.name.slice(0,1).toUpperCase())}</div><div><strong>${esc(member.name)}${index===0?' · Bạn':''}</strong><p>${index===0?(checked?(checked.rest?'Đang nghỉ hôm nay':'Đã check-in'):'Chưa check-in hôm nay'):'Tên bạn lưu trên thiết bị này'}</p></div></div>`).join('')}</section>${shared.length?`<div class="section-row"><h2>Những bước tiến đã ghi</h2></div><section class="card">${shared.map(item=>`<button class="day-entry" data-action="checkout" data-id="${esc(item.id)}">${icon('check')}<span>${esc(item.title)}<small>${esc(item.reflection || 'Đã hoàn thành')}</small></span></button>`).join('')}</section>`:''}<button class="button secondary full" data-action="invite">Mời bạn đồng hành</button>`:`<section class="card empty"><div class="welcome-symbol">${icon('users')}</div><h2>Những điều lớn bắt đầu<br>từ một vòng tròn nhỏ.</h2><p>Chọn một mục tiêu chung, thêm bạn đồng hành và nhìn lại cam kết của mình mỗi ngày.</p><button class="button full" data-action="create-circle">${icon('plus')} Tạo vòng tròn đầu tiên</button></section>`}<p class="notice">Nhóm và check-in lưu trên trình duyệt này. Mời thành viên và đồng bộ trực tuyến đang được phát triển, giống chế độ cục bộ trên Android.</p></div>`;
 }
-function activityEditor() {
-  photoRequest++;activityPhoto=null;photoBusy=false;
-  const end=new Date(),start=new Date(+end-30*60000),localInput=date=>`${dateKey(date)}T${timeText(date.getHours()*60+date.getMinutes())}`;
-  showModal('Một việc ngoài màn hình',`<form id="activity-form"><label class="field">Bạn vừa làm gì?<input name="title" placeholder="Ví dụ, chạy bộ 30 phút" maxlength="140" required></label><label class="field">Bắt đầu<input name="start" type="datetime-local" value="${localInput(start)}" required></label><label class="field">Kết thúc<input name="end" type="datetime-local" value="${localInput(end)}" required></label><p class="field-hint">Toàn bộ khoảng thời gian phải nằm trong 24 giờ vừa qua. Lưu riêng tư trong trình duyệt.</p><input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" id="activity-photo"><button type="button" class="text-button" data-action="photo">${icon('plus')} Thêm ảnh minh chứng</button><div id="activity-photo-preview"></div><p id="form-error" class="form-error" role="alert"></p><button class="button full" id="save-activity">Lưu hoạt động</button></form>`);
+function activityInput(value){const date=new Date(value);return `${dateKey(date)}T${timeText(date.getHours()*60+date.getMinutes())}`;}
+function activityRow(a,from='today'){
+  const minutes=Math.round((Date.parse(a.end)-Date.parse(a.start))/60000);
+  return `<article class="card activity-record" data-activity-id="${esc(a.id)}"><span class="tag">Tự ghi nhận · ${esc(audienceLabel(a.audience))}</span><h3><button class="record-title" data-action="activity-detail" data-id="${esc(a.id)}" data-from="${esc(from)}">${esc(a.title)}</button></h3><p class="field-hint">${dayLabel(dateKey(new Date(a.end)))} · ${minutes} phút${a.photo?' · Có ảnh':''}</p>${a.note?`<p class="record-note">${esc(a.note)}</p>`:''}<div class="record-footer"><button class="text-button" data-action="activity-detail" data-id="${esc(a.id)}" data-from="${esc(from)}">Xem chi tiết</button><button class="text-button" data-action="edit-activity" data-id="${esc(a.id)}" data-from="${esc(from)}">Sửa</button><button class="text-button danger-text" data-action="delete-record" data-collection="activities" data-id="${esc(a.id)}">Xóa</button></div></article>`;
 }
+function openHistory(){
+  showModal('Nhật ký hoạt động',`<div id="activity-history"><p class="modal-copy">Toàn bộ hoạt động bạn đã ghi trên trình duyệt này. Không cần quyền theo dõi ứng dụng.</p><label class="field">Tìm hoạt động<input id="history-search" type="search" value="${esc(historyFilter.search)}" placeholder="Tên hoạt động hoặc ghi chú"></label><label class="field">Lọc theo ngày<input id="history-date" type="date" value="${esc(historyFilter.date)}"></label><button class="text-button" data-action="clear-history-filter">Xem mọi ngày</button><p id="history-count" role="status" class="field-hint"></p><div id="history-list"></div></div>`);
+  renderHistoryRows();
+}
+function renderHistoryRows(){
+  const list=document.getElementById('history-list');if(!list)return;
+  const records=activityHistory(state.activities,historyFilter);
+  document.getElementById('history-count').textContent=`${records.length} / ${state.activities.length} hoạt động`;
+  list.innerHTML=records.length?records.map(a=>activityRow(a,'history')).join(''):'<p class="modal-copy">Chưa có hoạt động phù hợp. Thử bỏ bộ lọc hoặc ghi một hoạt động mới.</p>';
+}
+function activityDetail(id,from='today'){
+  const a=state.activities.find(a=>a.id===id);if(!a){toast('Hoạt động này đã bị xóa.');return;}
+  activityOrigin=from;
+  const stamp=v=>new Date(v).toLocaleString('vi-VN',{dateStyle:'short',timeStyle:'short'});
+  showModal(a.title,`<p class="modal-copy">${esc(stamp(a.start))} – ${esc(stamp(a.end))}</p><p class="record-note">${esc(a.note || 'Chưa có ghi chú.')}</p>${a.photo?`<img class="activity-photo" src="${esc(a.photo)}" alt="Ảnh minh chứng hoạt động">`:''}<div class="record-actions"><button class="button full" data-action="edit-activity" data-id="${esc(id)}" data-from="${esc(from)}">Sửa hoạt động</button><button class="text-button danger-text" data-action="delete-record" data-collection="activities" data-id="${esc(id)}">Xóa hoạt động</button><button class="text-button" data-action="activity-history">Xem tất cả hoạt động</button></div>`);
+}
+function activityEditor(id=null,from='today') {
+  const item=typeof id==='string'?state.activities.find(a=>a.id===id):null;
+  if(typeof id==='string'&&!item){toast('Hoạt động này đã bị xóa.');return;}
+  activityOrigin=from;photoRequest++;activityPhoto=item?.photo || null;photoBusy=false;
+  const end=item?new Date(item.end):new Date(),start=item?new Date(item.start):new Date(+end-30*60000),localInput=date=>`${dateKey(date)}T${timeText(date.getHours()*60+date.getMinutes())}`;
+  showModal(item?'Sửa hoạt động':'Một việc ngoài màn hình',`<form id="activity-form"><input type="hidden" name="id" value="${esc(item?.id || '')}"><label class="field">Bạn vừa làm gì?<input name="title" value="${esc(item?.title || '')}" placeholder="Ví dụ, chạy bộ 30 phút" maxlength="140" required></label><label class="field">Bắt đầu<input name="start" type="datetime-local" value="${localInput(start)}" required></label><label class="field">Kết thúc<input name="end" type="datetime-local" value="${localInput(end)}" required></label><p class="field-hint">${item?'Có thể sửa ghi chép cũ. Kết thúc cần sau bắt đầu và không ở tương lai.':'Toàn bộ khoảng thời gian phải nằm trong 24 giờ vừa qua.'} Lưu trên trình duyệt này.</p><label class="field">Ghi chú hoạt động (tùy chọn)<textarea name="note" maxlength="1000">${esc(item?.note || '')}</textarea></label><input class="hidden" type="file" accept="image/jpeg,image/png,image/webp" id="activity-photo"><button type="button" class="text-button" data-action="photo">${icon('plus')} ${activityPhoto?'Đổi ảnh minh chứng':'Thêm ảnh minh chứng'}</button><div id="activity-photo-preview">${activityPhoto?`<img class="activity-photo" src="${esc(activityPhoto)}" alt="Ảnh minh chứng đã chọn"><button type="button" class="text-button" data-action="remove-photo">Bỏ ảnh</button>`:''}</div><p id="form-error" class="form-error" role="alert"></p><button class="button full" id="save-activity">${item?'Lưu thay đổi':'Lưu hoạt động'}</button></form>`);
+}
+
 async function attachActivityPhoto(file){
   const form=document.getElementById('activity-form');if(!form||!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024){showFormError(form.querySelector('#form-error'),'Chọn ảnh JPG, PNG hoặc WebP dưới 10 MB.');return;}
@@ -621,7 +680,7 @@ async function attachActivityPhoto(file){
   try{const image=new Image();image.src=url;await image.decode();const ratio=Math.min(1,1000/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*ratio));canvas.height=Math.max(1,Math.round(image.height*ratio));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);const photo=canvas.toDataURL('image/jpeg',.75);if(photo.length>800000)throw Error();if(!form.isConnected || request!==photoRequest)return;activityPhoto=photo;form.querySelector('#activity-photo-preview').innerHTML=`<img class="activity-photo" src="${photo}" alt="Ảnh minh chứng đã chọn"><button type="button" class="text-button" data-action="remove-photo">Bỏ ảnh</button>`;form.querySelector('#form-error').textContent='';}catch{if(form.isConnected)showFormError(form.querySelector('#form-error'),'Chưa đọc được ảnh này. Hãy chọn ảnh khác hoặc ảnh nhỏ hơn.');}finally{URL.revokeObjectURL(url);if(request===photoRequest){photoBusy=false;if(form.isConnected)form.querySelector('#save-activity').disabled=false;}}
 }
 function profile() {
-  showModal('Hồ sơ của bạn',`<div class="row"><div class="avatar">${esc(state.profile.name.slice(0,1).toUpperCase())}</div><div><strong>${esc(state.profile.name)}</strong><p class="tiny muted">Ngày sinh: ${esc(state.profile.birthday || 'Chưa nhập')}</p></div></div><p class="modal-copy">${esc(state.profile.goal)}. Đang dùng không đăng nhập, dữ liệu trên trình duyệt này.</p><div class="stack"><button class="button secondary full" data-action="plans">${icon('spark')} Gói Brain10</button><button class="button secondary full" data-action="edit-profile">Sửa thông tin cá nhân</button><button class="button secondary full" data-action="widgets">Xem widget Android mô phỏng</button><button class="button secondary full" data-action="login">Liên kết tài khoản</button><a class="button full" href="../#download">Khám phá bản Android</a><button class="text-button" data-action="reset">Xóa dữ liệu trải nghiệm</button></div><p class="field-hint">Brain10 web · cùng luồng sản phẩm Android 0.6.8. ${storageAvailable?'Đang lưu cục bộ.':'Trình duyệt chưa cho lưu lâu dài.'} Dữ liệu web và APK chưa đồng bộ.</p>`);
+  showModal('Hồ sơ của bạn',`<div class="row"><div class="avatar">${esc(state.profile.name.slice(0,1).toUpperCase())}</div><div><strong>${esc(state.profile.name)}</strong><p class="tiny muted">Ngày sinh: ${esc(state.profile.birthday || 'Chưa nhập')}</p></div></div><p class="modal-copy">${esc(state.profile.goal)}. Đang dùng không đăng nhập, dữ liệu trên trình duyệt này.</p><div class="stack"><button class="button secondary full" data-action="plans">${icon('spark')} Gói Brain10</button><button class="button secondary full" data-action="edit-profile">Sửa thông tin cá nhân</button><button class="button secondary full" data-action="widgets">Xem widget Android mô phỏng</button><button class="button secondary full" data-action="login">Liên kết tài khoản</button><a class="button full" href="../#download">Khám phá bản Android</a><button class="text-button" data-action="reset">Xóa dữ liệu trải nghiệm</button></div><p class="field-hint">Brain10 web · đang thử tính năng sửa việc và nhật ký. ${storageAvailable?'Đang lưu cục bộ.':'Trình duyệt chưa cho lưu lâu dài.'} Dữ liệu web và APK chưa đồng bộ.</p>`);
 }
 const actions = {
   limits:openLimits, close:()=>modal.close(), profile, plans:showPlans,
@@ -642,7 +701,21 @@ const actions = {
   tab:el=>{tab=Number(el.dataset.tab); render(true);}, day:el=>{selectedDay=Number(el.dataset.day);render();},
   welcome:()=>{welcomeStep=0;state.ready=false;switchPhone('app');},
   'sample-profile':async()=>{if(!state.tasks.length && !state.plan.length)state.tasks=[{id:uid(),title:'Đọc 10 trang sách',duration:45,day:dateKey(),done:false,note:'Ghi lại 3 ý chính.'},{id:uid(),title:'Luyện nói tiếng Anh 15 phút',duration:15,day:dateKey(),done:false,note:''}];state.profile={name:'An',birthday:'',goal:'Học tập / Thi cử'};state.ready=true;const saved=await save();render(true);if(saved)toast('Bạn đang dùng hồ sơ và công việc mẫu.');},
-  'add-task':addTask, checkout:el=>checkout(el.dataset.id), activity:activityEditor,
+  'add-task':()=>addTask(), checkout:el=>checkout(el.dataset.id), activity:()=>activityEditor(),
+  'task-options':el=>taskOptions(el.dataset.id),
+  'edit-task':el=>addTask(el.dataset.id),
+  'move-task':el=>moveTask(el.dataset.id,el.dataset.day),
+  'activity-history':openHistory,
+  'clear-history-filter':()=>{historyFilter={search:'',date:''};openHistory();},
+  'activity-detail':el=>activityDetail(el.dataset.id,el.dataset.from),
+  'edit-activity':el=>activityEditor(el.dataset.id,el.dataset.from),
+  'delete-record':el=>confirmDeleteRecord(el.dataset.collection,el.dataset.id),
+  'confirm-delete-record':async el=>{
+    const {collection,id}=el.dataset;
+    if(!['tasks','activities'].includes(collection))return;
+    if(collection==='tasks'&&focusUses(id)){toast('Kết thúc phiên tập trung trước khi xóa công việc.');return;}
+    await removeSchedule(collection,id);
+  },
   'move-task-today':async el=>{
     const task=state.tasks.find(item=>item.id===el.dataset.id), today=dateKey();
     if (!task || task.done || !task.day || task.day>=today) return;
@@ -663,7 +736,7 @@ const actions = {
   'delete-fixed':el=>removeSchedule('commitments',el.dataset.id),
   'delete-plan':el=>removeSchedule('plan',el.dataset.id),
   'undo-schedule':async()=>{
-    if(!undoEntry)return;const {collection,index,entry}=undoEntry;undoEntry=null;clearTimeout(undoTimer);
+    if(!undoEntry||undoEntry.generation!==state.generation)return;const {collection,index,entry}=undoEntry;undoEntry=null;clearTimeout(undoTimer);
     if(!state[collection].some(e=>e.id===entry.id))state[collection].splice(Math.min(index,state[collection].length),0,entry);
     const saved=await save();render();if(saved)toast('Đã khôi phục lịch.');
   },
@@ -761,10 +834,17 @@ document.addEventListener('submit',async event=>{
       state.profile={...state.profile,name,birthday,goal:String(data.get('goal'))};welcomeStep=1;await save();render(true);break;
     }
     case 'task-form': {
-      if(!title)return;
-      state.tasks.push({id:uid(),title,duration:Number(data.get('duration')),day:dateKey(dateOffset(Number(data.get('day')))),done:false,note:String(data.get('note')).trim()});
-      form.querySelector('button[type="submit"], button:not([type])').disabled=true;
-      const saved=await save();modal.close();render();if(saved)toast('Đã thêm việc vào nhịp ngày.');break;
+      const id=String(data.get('id') || ''),entry=id?state.tasks.find(t=>t.id===id):null;
+      if(id&&!entry){error('Công việc này đã bị xóa. Đóng rồi mở lại danh sách.');return;}
+      let patch;
+      try{patch=taskChanges(entry,{title,duration:data.get('duration'),day:id?String(data.get('date')):dateKey(dateOffset(Number(data.get('day')))),note:data.get('note')});}catch(e){error(e.message);return;}
+      if(entry&&patch.day!==entry.day&&focusUses(id)){error('Kết thúc phiên tập trung gắn với việc này trước khi dời ngày.');return;}
+      const button=form.querySelector('button:not([type])');button.disabled=true;
+      try{
+        if(entry)await updateLocalRecord('tasks',id,patch);
+        else{const task={id:uid(),...patch,done:false};state.tasks.push(task);if(!await save()){state.tasks=state.tasks.filter(t=>t.id!==task.id);throw new Error('Chưa lưu được công việc. Hãy thử lại.');}}
+        modal.close();render();toast(entry?'Đã lưu thay đổi công việc.':'Đã thêm việc vào nhịp ngày.');
+      }catch(e){error(e.message);}finally{button.disabled=false;}break;
     }
     case 'checkout-form':completeTask(form);break;
     case 'fixed-form': {
@@ -777,11 +857,18 @@ document.addEventListener('submit',async event=>{
       const saved=await save();modal.close();render();if(saved)toast('Đã lưu lịch cố định.');break;
     }
     case 'activity-form': {
-      const start=new Date(String(data.get('start'))),end=new Date(String(data.get('end'))),now=Date.now();
-      if(!title || !Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || start>=end || end.getTime()>now || start.getTime()<now-24*60*60000){error('Toàn bộ hoạt động cần nằm trong 24 giờ vừa qua; giờ kết thúc phải sau giờ bắt đầu.');return;}
+      const id=String(data.get('id') || ''),entry=id?state.activities.find(a=>a.id===id):null;
+      if(id&&!entry){error('Hoạt động này đã bị xóa. Đóng rồi mở lại nhật ký.');return;}
       if(photoBusy){error('Chờ ảnh xử lý xong rồi lưu nhé.');return;}
-      const activity={id:uid(),title,start:start.toISOString(),end:end.toISOString(),duration:Math.round((end-start)/60000),...(activityPhoto?{photo:activityPhoto}:{})};
-      state.activities.push(activity);const saved=await save();if(!saved){state.activities=state.activities.filter(item=>item.id!==activity.id);error('Chưa lưu được hoạt động. Trình duyệt có thể đã hết dung lượng; thử bỏ ảnh hoặc giải phóng bộ nhớ.');return;}modal.close();render();toast('Đã ghi nhận hoạt động, chỉ mình bạn xem.');break;
+      let patch;
+      try{patch=activityChanges(entry,{title,start:entry&&String(data.get('start'))===activityInput(entry.start)?entry.start:String(data.get('start')),end:entry&&String(data.get('end'))===activityInput(entry.end)?entry.end:String(data.get('end')),note:String(data.get('note') || ''),photo:activityPhoto});}catch(e){error(e.message);return;}
+      const button=document.getElementById('save-activity');button.disabled=true;
+      try{
+        if(entry)await updateLocalRecord('activities',id,patch);
+        else{const activity={id:uid(),...patch};state.activities.push(activity);if(!await save()){state.activities=state.activities.filter(a=>a.id!==activity.id);throw new Error('Chưa lưu được hoạt động. Trình duyệt có thể đã hết dung lượng; thử bỏ ảnh hoặc giải phóng bộ nhớ.');}}
+        const origin=activityOrigin;modal.close();render();if(origin==='history')openHistory();else if(origin&&origin!=='today')statsDay(origin);
+        if(origin==='today')toast(entry?'Đã lưu thay đổi hoạt động.':'Đã ghi nhận hoạt động, chỉ mình bạn xem.');
+      }catch(e){error(e.message);}finally{button.disabled=false;}break;
     }
     case 'circle-form': {
       const name=String(data.get('name')).trim(),goal=String(data.get('goal')).trim();if(!name || !goal)return;
@@ -808,3 +895,8 @@ setInterval(()=>{
   const clock=document.getElementById('focus-clock');if(clock)clock.textContent=focusClock();
 },1000);
 render();
+
+document.addEventListener('input',event=>{
+  if(event.target.id==='history-search'){historyFilter.search=event.target.value;renderHistoryRows();}
+  if(event.target.id==='history-date'){historyFilter.date=event.target.value;renderHistoryRows();}
+});
