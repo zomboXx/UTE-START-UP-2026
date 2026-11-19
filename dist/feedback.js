@@ -60,7 +60,11 @@
     score.setAttribute('aria-hidden', 'true');
     rating.replaceChildren(score, createStars(average));
     rating.hidden = false;
-    document.getElementById('feedback-preview-label').hidden = !illustrative;
+    const label = document.getElementById('feedback-preview-label')
+      ?? element('p', null, 'Phản hồi minh họa');
+    label.id = 'feedback-preview-label';
+    label.hidden = !illustrative;
+    rating.after(label);
     empty.hidden = true;
     viewport.hidden = false;
 
